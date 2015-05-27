@@ -34,7 +34,7 @@ class PacketType(type):
         # At this point we actually have a references to the class, so we can register it
         # in our packet type registry for later decoding.
         if hasattr(cls, '_Meta'):
-            if 'endpoint' in cls._Meta:
+            if 'endpoint' in cls._Meta and cls._Meta.get('register', True):
                 _PacketRegistry[cls._Meta['endpoint']] = cls
         # Fill in all of the fields with a reference to this class.
         # TODO: This isn't used any more; remove it?

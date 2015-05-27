@@ -138,12 +138,25 @@ class PascalString(Field):
 class FixedString(Field):
     def __init__(self, length, **kwargs):
         self.length = length
-        self.struct_format = '%ds' % length
         super(FixedString, self).__init__(**kwargs)
 
+    def prepare(self, obj, value):
+        if isinstance(self.length, Field):
+            setattr(obj, self.length._name, len(value))
+
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
-        result = super(FixedString, self).buffer_to_value(obj, buffer, offset)
-        return result[0].split('\x00')[0], result[1]
+        if isinstance(self.length, Field):
+            length = getattr(obj, self.length._name)
+        else:
+            length = self.length
+        return struct.unpack_from('%ds' % length, buffer, offset)[0].split('\x00')[0], length
+
+    def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
+        if isinstance(self.length, Field):
+            length = getattr(obj, self.length._name)
+        else:
+            length = self.length
+        return struct.pack('%ds' % length, value)
 
 
 class PascalList(Field):

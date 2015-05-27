@@ -82,7 +82,6 @@ class SystemMessage(PebblePacket):
         0x0a: FirmwareUpdateStartResponse,
     }, accept_missing=True)
 
-
 # BLE control
 
 
@@ -94,3 +93,26 @@ class BLEControl(PebblePacket):
     opcode = Uint8(default=0x4)
     discoverable = Boolean()
     duration = Uint16()
+
+# Log messages
+
+
+class LogShippingControl(PebblePacket):
+    class Meta:
+        endpoint = 0x07D0
+        register = False
+
+    kind = Uint8(default=0x00)
+    level = Uint8()
+
+
+class LogMessage(PebblePacket):
+    class Meta:
+        endpoint = 0x07D0
+
+    timestamp = Uint32()
+    level = Uint8()
+    message_length = Uint8()
+    line_number = Uint16()
+    filename = FixedString(16)
+    message = FixedString(message_length)
