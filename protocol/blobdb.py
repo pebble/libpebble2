@@ -21,6 +21,9 @@ class ClearCommand(PebblePacket):
 
 
 class BlobCommand(PebblePacket):
+    class Meta:
+        endpoint = 0xb1db
+
     command = Uint8()
     token = Uint16()
     database = Uint8()

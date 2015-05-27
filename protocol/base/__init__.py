@@ -2,7 +2,7 @@ __author__ = 'katharine'
 
 import collections
 import struct
-from types import Field
+from types import Field, DEFAULT_ENDIANNESS
 
 _PacketRegistry = {}
 
@@ -53,14 +53,19 @@ class PebblePacket(object):
             getattr(self, k)  # Throws an exception if the property doesn't exist.
             setattr(self, k, v)
 
-    def serialise(self):
+    def serialise(self, default_endianness=None):
+        # Figure out an endianness.
+        endianness = (default_endianness or DEFAULT_ENDIANNESS)
+        if hasattr(self, '_Meta'):
+            endianness = self._Meta.get('endianness', endianness)
+
         # Some fields want to manipulate other fields that appear before them (e.g. Unions)
         for k, v in self._type_mapping.iteritems():
             v.prepare(self, getattr(self, k))
 
         message = ''
         for k, v in self._type_mapping.iteritems():
-            message += v.value_to_bytes(self, getattr(self, k))
+            message += v.value_to_bytes(self, getattr(self, k), default_endianness=endianness)
         return message
 
     def serialise_packet(self):
@@ -79,11 +84,13 @@ class PebblePacket(object):
             return None, length
 
     @classmethod
-    def parse(cls, message):
+    def parse(cls, message, default_endianness=DEFAULT_ENDIANNESS):
         obj = cls()
         offset = 0
+        if hasattr(cls, '_Meta'):
+            default_endianness = cls._Meta.get('endianness', default_endianness)
         for k, v in cls._type_mapping.iteritems():
-            value, length = v.buffer_to_value(obj, message, offset)
+            value, length = v.buffer_to_value(obj, message, offset, default_endianness=default_endianness)
             offset += length
             setattr(obj, k, value)
         return obj, offset
