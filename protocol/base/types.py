@@ -1,5 +1,6 @@
 __author__ = "katharine"
 
+import array
 import struct
 import uuid
 
@@ -7,10 +8,11 @@ import uuid
 class Field(object):
     struct_format = None
 
-    def __init__(self):
+    def __init__(self, default=None):
         self.type = type(self).__name__
         self._name = None
         self._parent = None
+        self._default = default
         self.field_id = Field.next_id
         Field.next_id += 1
 
@@ -105,10 +107,26 @@ class PascalString(Field):
         return struct.pack('B', len(value)) + value
 
 
+class FixedString(Field):
+    def __init__(self, length, **kwargs):
+        self.length = length
+        self.struct_format = '%ds' % length
+        super(FixedString, self).__init__(**kwargs)
+
+    def buffer_to_value(self, obj, buffer, offset):
+        result = super(FixedString, self).buffer_to_value(obj, buffer, offset)
+        return result[0].split('\x00')[0], result[1]
+
+
 class PascalList(Field):
-    def __init__(self, member_type):
+    def __init__(self, member_type, count=None):
         self.member_type = member_type
+        self.count = count
         super(PascalList, self).__init__()
+
+    def prepare(self, obj, value):
+        if isinstance(self.count, Field):
+            setattr(obj, self.count._name, len(value))
 
     def value_to_bytes(self, obj, values):
         result = ''
@@ -120,10 +138,38 @@ class PascalList(Field):
     def buffer_to_value(self, obj, buffer, offset):
         results = []
         length = 0
-        while offset + length < len(buffer):
+        max_count = None
+
+        if isinstance(self.count, Field):
+            max_count = getattr(obj, self.count._name)
+
+        i = 0
+        while offset + length < len(buffer) and (max_count is None or i < max_count):
             item_length, = struct.unpack_from('B', buffer, offset + length)
             length += 1
             print self.member_type
             results.append(self.member_type.parse(buffer[offset+length:offset+length+item_length])[0])
             length += item_length
+            i += 1
         return results, length
+
+
+class BinaryArray(Field):
+    def __init__(self, length=None, **kwargs):
+        self.length = length
+        super(BinaryArray, self).__init__(**kwargs)
+
+    def prepare(self, obj, value):
+        if isinstance(self.length, Field):
+            setattr(obj, self.length._name, len(value))
+
+    def value_to_bytes(self, obj, value):
+        return value.tostring()
+
+    def buffer_to_value(self, obj, buffer, offset):
+        if isinstance(self.length, Field):
+            length = getattr(obj, self.length._name)
+            return array.array('B', buffer[offset:offset+length]), length
+        else:
+            length = len(buffer) - offset
+            return array.array('B', buffer[offset:]), length

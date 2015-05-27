@@ -18,13 +18,13 @@ class PacketType(type):
             dct['_Meta'] = dct['Meta'].__dict__
             del dct['Meta']
 
-        # For each Field, add it to our mapping, then reset the exposed value to None.
+        # For each Field, add it to our mapping, then set the exposed value to its default value.
         for k, v in dct.items():
             if not isinstance(v, Field):
                 continue
             v._name = k
             mapping.append((k, v))
-            dct[k] = None
+            dct[k] = v._default
         # Put the results into an ordered dict. We sort on field_id to ensure that our dict ends up
         # in the correct order.
         dct['_type_mapping'] = collections.OrderedDict(sorted(mapping, key=lambda x: x[1].field_id))
@@ -36,7 +36,6 @@ class PacketType(type):
         if hasattr(cls, '_Meta'):
             if 'endpoint' in cls._Meta:
                 _PacketRegistry[cls._Meta['endpoint']] = cls
-                print "Registered packet type %s" % name
         # Fill in all of the fields with a reference to this class.
         # TODO: This isn't used any more; remove it?
         for k, v in cls._type_mapping.iteritems():
@@ -68,7 +67,7 @@ class PebblePacket(object):
         if not hasattr(self, '_Meta'):
             raise ReferenceError("Can't serialise a packet that doesn't have an endpoint ID.")
         serialised = self.serialise()
-        return struct.pack('!HH', self._Meta['endpoint'], len(serialised) + 4) + serialised
+        return struct.pack('!HH', len(serialised) + 4, self._Meta['endpoint']) + serialised
 
     @classmethod
     def parse_message(cls, message):
