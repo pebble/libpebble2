@@ -116,3 +116,24 @@ class LogMessage(PebblePacket):
     line_number = Uint16()
     filename = FixedString(16)
     message = FixedString(message_length)
+
+
+class AppLogShippingControl(PebblePacket):
+    class Meta:
+        endpoint = 0x07D6
+        register = False
+
+    enable = Boolean()
+
+
+class AppLogMessage(PebblePacket):
+    class Meta:
+        endpoint = 0x07D6
+
+    uuid = UUID()
+    timestamp = Uint32()
+    level = Uint8()
+    message_length = Uint8()
+    line_number = Uint16()
+    filename = FixedString(16)
+    message = FixedString(message_length)

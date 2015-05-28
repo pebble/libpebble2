@@ -69,12 +69,10 @@ class Boolean(Field):
 
 
 class UUID(Field):
-    struct_format = '16B'
-
-    def buffer_to_value(self, obj, buffer, offset):
+    def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         return uuid.UUID(bytes=buffer[offset:offset+16]), 16
 
-    def value_to_bytes(self, obj, value):
+    def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
         assert isinstance(value, uuid.UUID)
         return value.bytes
 
@@ -206,6 +204,8 @@ class BinaryArray(Field):
             setattr(obj, self.length._name, len(value))
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
+        if not isinstance(value, array.array):
+            value = array.array('B', value)
         return value.tostring()
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):

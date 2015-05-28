@@ -72,11 +72,11 @@ class PebblePacket(object):
         if not hasattr(self, '_Meta'):
             raise ReferenceError("Can't serialise a packet that doesn't have an endpoint ID.")
         serialised = self.serialise()
-        return struct.pack('!HH', len(serialised) + 4, self._Meta['endpoint']) + serialised
+        return struct.pack('!HH', len(serialised), self._Meta['endpoint']) + serialised
 
     @classmethod
     def parse_message(cls, message):
-        length, = struct.unpack_from('!H', message, 0)
+        length = struct.unpack_from('!H', message, 0)[0] + 4
         command, = struct.unpack_from('!H', message, 2)
         if command in _PacketRegistry:
             return _PacketRegistry[command].parse(message[4:length])[0], length
