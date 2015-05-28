@@ -5,7 +5,7 @@ __author__ = 'katharine'
 import struct
 import websocket
 
-from .base import BaseTransport, MessageTarget, MessageTargetWatch
+from . import BaseTransport, MessageTarget, MessageTargetWatch
 from . import ws_protocol
 
 

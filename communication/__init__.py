@@ -4,7 +4,7 @@ __author__ = 'katharine'
 
 from enum import Enum
 
-from communication.transports.base import BaseTransport, MessageTargetWatch
+from communication.transports import BaseTransport, MessageTargetWatch
 from events import BaseEventHandler
 from protocol.base import PebblePacket
 from protocol.system import PhoneAppVersion, AppVersionResponse
