@@ -20,9 +20,6 @@ class BaseTransport(object):
     def must_initialise(self):
         pass
 
-    def __init__(self):
-        pass
-
     @abstractmethod
     def connect(self):
         pass
