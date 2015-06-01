@@ -5,9 +5,9 @@ import uuid
 
 from .blobdb import BlobDBClient, BlobDatabaseID, SyncWrapper, BlobStatus
 from .putbytes import PutBytes, PutBytesType
-from errors import PebbleError
-from protocol.apps import AppMetadata, AppRunState, AppRunStateStart, AppFetchRequest, AppFetchResponse, AppFetchStatus
-from util.bundle import PebbleBundle
+from libpebble2.exceptions import PebbleError
+from libpebble2.protocol.apps import AppMetadata, AppRunState, AppRunStateStart, AppFetchRequest, AppFetchResponse, AppFetchStatus
+from libpebble2.util.bundle import PebbleBundle
 
 __all__ = ["AppInstaller", "AppInstallError"]
 

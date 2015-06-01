@@ -6,8 +6,8 @@ import threading
 import time
 from Queue import Queue
 
-from events import EventSourceMixin
-from protocol.blobdb import *
+from libpebble2.events import EventSourceMixin
+from libpebble2.protocol.blobdb import *
 
 __all__ = ["BlobDBClient", "SyncWrapper"]
 

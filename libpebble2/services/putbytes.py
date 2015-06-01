@@ -3,10 +3,10 @@ __author__ = 'katharine'
 
 from enum import IntEnum
 
-from events import EventSourceMixin
-from errors import PebbleError
-from protocol import transfers
-from util import stm32_crc
+from libpebble2.events import EventSourceMixin
+from libpebble2.exceptions import PebbleError
+from libpebble2.protocol import transfers
+from libpebble2.util import stm32_crc
 
 __all__ = ["PutBytes", "PutBytesError", "PutBytesType"]
 

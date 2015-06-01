@@ -4,10 +4,10 @@ __author__ = 'katharine'
 
 from enum import Enum
 
-from communication.transports import BaseTransport, MessageTargetWatch
-from events import BaseEventHandler
-from protocol.base import PebblePacket
-from protocol.system import PhoneAppVersion, AppVersionResponse
+from .transports import BaseTransport, MessageTargetWatch
+from libpebble2.events import BaseEventHandler
+from libpebble2.protocol.base import PebblePacket
+from libpebble2.protocol.system import PhoneAppVersion, AppVersionResponse
 
 _EventType = Enum('_EventType', ('Watch', 'Transport'))
 
