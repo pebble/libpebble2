@@ -97,4 +97,13 @@ class PebblePacket(object):
 
     def __repr__(self):
         return "%s(%s)" % (type(self).__name__,
-                           ', '.join('%s=%s' % (k, getattr(self, k)) for k in self._type_mapping.keys()))
+                           ', '.join('%s=%s' % (k, self._format_repr(getattr(self, k))) for k in self._type_mapping.keys()))
+
+    def _format_repr(self, value):
+        if isinstance(value, basestring) and '\x00' in value:
+            if len(value) < 20:
+                return value.encode('hex')
+            else:
+                return value.encode('hex')[:17] + '...'
+        else:
+            return value

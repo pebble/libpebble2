@@ -31,7 +31,6 @@ class PebbleConnection(object):
     def pump_reader(self):
         origin, message = self.transport.read_packet()
         if isinstance(origin, MessageTargetWatch):
-            print '<-', message.encode('hex')
             self.handle_watch_message(message)
         else:
             self.broadcast_transport_message(origin, message)
@@ -54,10 +53,12 @@ class PebbleConnection(object):
     def unregister_endpoint(self, handle):
         return self.event_handler.unregister_handler(handle)
 
+    def read_from_endpoint(self, endpoint):
+        return self.event_handler.wait_for_event((_EventType.Watch, endpoint))
+
     def send_packet(self, packet):
         print '->', packet
         serialised = packet.serialise_packet()
-        print '->', serialised.encode('hex')
         self.transport.send_packet(serialised)
 
     def _register_internal_handlers(self):

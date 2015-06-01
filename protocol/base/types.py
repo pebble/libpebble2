@@ -15,19 +15,24 @@ class PacketDecodeError(Exception):
 class Field(object):
     struct_format = None
 
-    def __init__(self, default=None, endianness=None):
+    def __init__(self, default=None, endianness=None, enum=None):
         self.type = type(self).__name__
         self._name = None
         self._parent = None
         self._default = default
+        self._enum = enum
         self.field_id = Field.next_id
         self.endianness = endianness
         Field.next_id += 1
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         try:
-            return struct.unpack_from((self.endianness or default_endianness)
+            value, length = struct.unpack_from((self.endianness or default_endianness)
                                       + self.struct_format, buffer, offset)[0], struct.calcsize(self.struct_format)
+            if self._enum is not None:
+                return self._enum(value), length
+            else:
+                return value, length
         except struct.error as e:
             raise PacketDecodeError("{}: {}".format(self.type, e))
 
@@ -99,10 +104,12 @@ class Union(Field):
         super(Union, self).__init__()
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        if self.accept_missing and value is not None:
+        if value is not None:
             return value.serialise(default_endianness=default_endianness)
-        else:
+        elif self.accept_missing:
             return ''
+        else:
+            raise Exception("???")
 
     def prepare(self, obj, value):
         try:
@@ -111,7 +118,7 @@ class Union(Field):
             if not self.accept_missing:
                 raise
         if isinstance(self.length, Field):
-            setattr(obj, self.length, len(value.serialise()))
+            setattr(obj, self.length._name, len(value.serialise()))
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         if isinstance(self.length, Field):
@@ -149,6 +156,19 @@ class PascalString(Field):
             value = value[:254]
         value += '\x00'
         return struct.pack('B', len(value)) + value
+
+
+class NullTerminatedString(Field):
+    def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
+        end = offset
+        while buffer[end] != '\x00':
+            end += 1
+            if end >= len(buffer):
+                raise PacketDecodeError("{}: Reached end of buffer without terminating.".format(self.type))
+        return buffer[offset:end].split('\x00')[0], end - offset + 1
+
+    def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
+        return value + '\x00'
 
 
 class FixedString(Field):
@@ -271,3 +291,4 @@ class BinaryArray(Field):
         else:
             length = len(buffer) - offset
             return array.array('B', buffer[offset:]), length
+

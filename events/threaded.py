@@ -34,7 +34,7 @@ class ThreadedEventHandler(BaseEventHandler):
     def broadcast_event(self, event, *args):
         # TODO: This could maybe deadlock?
         with self._handler_lock:
-            for handler in self._handlers.get(event, {}).itervalues():
+            for handler in self._handlers.get(event, {}).values():
                 handler(*args)
 
 
@@ -43,11 +43,10 @@ class _BlockingEventWait(object):
         self.block = threading.Event()
         self.event_handler = events
         self.result = None
-        self.handle = None
-        self.handle = self.event_handler.register_handler(event, self.result)
+        self.handle = self.event_handler.register_handler(event, self.handle_result)
 
-    def result(self, *args):
-        self.result = args
+    def handle_result(self, *args):
+        self.result, = args
         self.event_handler.unregister_handler(self.handle)
         self.block.set()
 
