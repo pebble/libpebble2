@@ -10,11 +10,7 @@ from .protocol import WebSocketRelayToWatch, WebSocketRelayFromWatch, endpoints,
 
 
 class MessageTargetPhone(MessageTarget):
-    def __init__(self, endpoint):
-        self.endpoint = endpoint
-
-    def __repr__(self):
-        return "%s(%d)" % (type(self).__name__, self.endpoint)
+    pass
 
 
 class WebsocketTransport(BaseTransport):
@@ -35,14 +31,14 @@ class WebsocketTransport(BaseTransport):
             MessageTargetPhone: self._send_to_phone,
         }
 
-        handlers[type(target)](message, target)
+        handlers[type(target)](message)
 
-    def _send_to_watch(self, message, target):
+    def _send_to_watch(self, message):
         self.send_packet(WebSocketRelayToWatch(payload=message).serialise(),
-                         target=MessageTargetPhone(endpoints[WebSocketRelayToWatch]))
+                         target=MessageTargetPhone())
 
-    def _send_to_phone(self, message, target):
-        message = struct.pack('B', target.endpoint) + message.serialise()
+    def _send_to_phone(self, message):
+        message = struct.pack('B', endpoints[type(message)]) + message.serialise()
         self.ws.send_binary(message)
 
     def read_packet(self):
@@ -52,5 +48,5 @@ class WebsocketTransport(BaseTransport):
             if from_watch.get(endpoint, None) == WebSocketRelayFromWatch:
                 return MessageTargetWatch(), message[1:]
             else:
-                packet = from_watch[endpoint].parse(message[1:])
-                return MessageTargetPhone(endpoint), packet
+                packet, length = from_watch[endpoint].parse(message[1:])
+                return MessageTargetPhone(), packet

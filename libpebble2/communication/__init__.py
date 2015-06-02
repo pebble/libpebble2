@@ -44,7 +44,10 @@ class PebbleConnection(object):
                 break
 
     def broadcast_transport_message(self, origin, message):
-        pass
+        self.event_handler.broadcast_event((_EventType.Transport, type(origin), type(message)), message)
+
+    def register_transport_endpoint(self, origin, message_type, handler):
+        return self.event_handler.register_handler((_EventType.Transport, origin, message_type), handler)
 
     def register_endpoint(self, endpoint, handler):
         return self.event_handler.register_handler((_EventType.Watch, endpoint), handler)
@@ -54,6 +57,9 @@ class PebbleConnection(object):
 
     def read_from_endpoint(self, endpoint):
         return self.event_handler.wait_for_event((_EventType.Watch, endpoint))
+
+    def read_transport_message(self, origin, message_type):
+        return self.event_handler.wait_for_event((_EventType.Transport, origin, message_type))
 
     def send_packet(self, packet):
         serialised = packet.serialise_packet()
