@@ -5,6 +5,7 @@ import uuid
 
 from .blobdb import BlobDBClient, BlobDatabaseID, SyncWrapper, BlobStatus
 from .putbytes import PutBytes, PutBytesType
+from libpebble2.events import EventSourceMixin
 from libpebble2.exceptions import PebbleError
 from libpebble2.protocol.apps import AppMetadata, AppRunState, AppRunStateStart, AppFetchRequest, AppFetchResponse, AppFetchStatus
 from libpebble2.util.bundle import PebbleBundle
@@ -16,11 +17,12 @@ class AppInstallError(PebbleError):
     pass
 
 
-class AppInstaller(object):
+class AppInstaller(EventSourceMixin):
     def __init__(self, pebble, event_handler=None, blobdb_client=None):
         self._pebble = pebble
         self._event_handler = event_handler
         self._blobdb = blobdb_client or BlobDBClient(pebble, event_handler)
+        EventSourceMixin.__init__(self, self._event_handler)
 
     def install(self, pbw_path):
         bundle = PebbleBundle(pbw_path)

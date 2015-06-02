@@ -100,7 +100,6 @@ class Union(Field):
         self.type_map = {v: k for k, v in self.contents.iteritems()}
         self.accept_missing = accept_missing
         self.length = length
-        print self.contents, self.type_map
         super(Union, self).__init__()
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
@@ -151,7 +150,6 @@ class PascalString(Field):
         return buffer[offset+1:offset+1+length].split('\x00')[0], length + 1
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        print obj, value
         if len(value) > 254:
             value = value[:254]
         value += '\x00'
