@@ -28,7 +28,7 @@ class EventSourceMixin(object):
     A convenient mixin to save on repeatedly exposing generic event handler functionality.
     """
     def __init__(self, handler):
-        self.__handler = handler
+        self.__handler = handler()
 
     def register_handler(self, event, handler):
         return self.__handler.register_handler(event, handler)

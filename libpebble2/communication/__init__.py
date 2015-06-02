@@ -20,9 +20,9 @@ class PebbleConnection(object):
         :param event_handler: BaseEventHandler
         """
         assert isinstance(transport, BaseTransport)
-        assert isinstance(event_handler, BaseEventHandler)
+        assert issubclass(event_handler, BaseEventHandler)
         self.transport = transport
-        self.event_handler = event_handler
+        self.event_handler = event_handler()
         self._register_internal_handlers()
 
     def connect(self):
@@ -39,7 +39,6 @@ class PebbleConnection(object):
         while len(message) >= 4:
             packet, length = PebblePacket.parse_message(message)
             message = message[length:]
-            print '<-', packet
             self.event_handler.broadcast_event((_EventType.Watch, type(packet)), packet)
             if length == 0:
                 break
@@ -57,7 +56,6 @@ class PebbleConnection(object):
         return self.event_handler.wait_for_event((_EventType.Watch, endpoint))
 
     def send_packet(self, packet):
-        print '->', packet
         serialised = packet.serialise_packet()
         self.transport.send_packet(serialised)
 

@@ -75,7 +75,7 @@ class PutBytes(EventSourceMixin):
             self._pebble.send_packet(transfers.PutBytes(data=(transfers.PutBytesPut(cookie=cookie, payload=chunk))))
             self._assert_success(self._pebble.read_from_endpoint(transfers.PutBytesResponse))
             sent += len(chunk)
-            self._broadcast_event("progress", sent, len(self._object))
+            self._broadcast_event("progress", len(chunk), sent, len(self._object))
 
     def _commit(self, cookie):
         crc = stm32_crc.crc32(self._object)
