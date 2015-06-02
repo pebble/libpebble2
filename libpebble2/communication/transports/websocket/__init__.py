@@ -34,8 +34,7 @@ class WebsocketTransport(BaseTransport):
         handlers[type(target)](message)
 
     def _send_to_watch(self, message):
-        self.send_packet(WebSocketRelayToWatch(payload=message).serialise(),
-                         target=MessageTargetPhone())
+        self.send_packet(WebSocketRelayToWatch(payload=message), target=MessageTargetPhone())
 
     def _send_to_phone(self, message):
         message = struct.pack('B', endpoints[type(message)]) + message.serialise()

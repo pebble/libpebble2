@@ -55,7 +55,7 @@ class QemuAccel(PebblePacket):
 
 
 class QemuVibration(PebblePacket):
-    pass
+    state = Uint8()
 
 
 class QemuButton(PebblePacket):
