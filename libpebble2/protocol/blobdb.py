@@ -1,5 +1,4 @@
 __author__ = 'katharine'
-
 from enum import IntEnum
 
 from base import PebblePacket
@@ -22,6 +21,14 @@ class ClearCommand(PebblePacket):
     pass
 
 
+class BlobDatabaseID(IntEnum):
+    Test = 0
+    Pin = 1
+    App = 2
+    Reminder = 3
+    Notification = 4
+
+
 class BlobCommand(PebblePacket):
     class Meta:
         endpoint = 0xb1db
@@ -30,7 +37,7 @@ class BlobCommand(PebblePacket):
 
     command = Uint8()
     token = Uint16()
-    database = Uint8()
+    database = Uint8(enum=BlobDatabaseID)
     content = Union(command, {
         0x01: InsertCommand,
         0x04: DeleteCommand,
@@ -47,14 +54,6 @@ class BlobStatus(IntEnum):
     KeyDoesNotExist = 0x06
     DatabaseFull = 0x07
     DataStale = 0x08
-
-
-class BlobDatabaseID(IntEnum):
-    Test = 0
-    Pin = 1
-    App = 2
-    Reminder = 3
-    Notification = 4
 
 
 class BlobResponse(PebblePacket):

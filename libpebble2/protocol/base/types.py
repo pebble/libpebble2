@@ -126,16 +126,28 @@ class Union(Field):
             length = len(buffer) - offset
         k = getattr(obj, self.determinant._name)
         try:
-            return self.contents[k].parse(buffer[offset:offset+length], default_endianness=DEFAULT_ENDIANNESS)
+            return self.contents[k].parse(buffer[offset:offset+length], default_endianness=default_endianness)
         except KeyError:
             if not self.accept_missing:
                 raise PacketDecodeError("{}: unrecognised value for union: {}".format(self.type, k))
 
 
+class Embed(Field):
+    def __init__(self, packet):
+        self.packet = packet
+        super(Embed, self).__init__()
+
+    def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
+        return value.serialise(default_endianness=default_endianness)
+
+    def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
+        return self.packet.parse(buffer[offset:], default_endianness=DEFAULT_ENDIANNESS)
+
+
 class Padding(Field):
     def __init__(self, length):
         self.length = length
-        super(Padding).__init__()
+        super(Padding, self).__init__()
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         return None, self.length
@@ -145,14 +157,18 @@ class Padding(Field):
 
 
 class PascalString(Field):
+    def __init__(self, null_terminated=False, *args, **kwargs):
+        self.null_terminated = null_terminated
+        super(PascalString, self).__init__(*args, **kwargs)
+
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         length, = struct.unpack_from('B', buffer, offset)
         return buffer[offset+1:offset+1+length].split('\x00')[0], length + 1
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        if len(value) > 254:
-            value = value[:254]
-        value += '\x00'
+        value = value[:255]
+        if self.null_terminated:
+            value = value[:254] + '\x00'
         return struct.pack('B', len(value)) + value
 
 
@@ -181,8 +197,10 @@ class FixedString(Field):
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         if isinstance(self.length, Field):
             length = getattr(obj, self.length._name)
-        else:
+        elif self.length is not None:
             length = self.length
+        else:
+            length = len(buffer) - offset
         try:
             return struct.unpack_from('%ds' % length, buffer, offset)[0].split('\x00')[0], length
         except struct.error:
@@ -191,8 +209,10 @@ class FixedString(Field):
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
         if isinstance(self.length, Field):
             length = getattr(obj, self.length._name)
-        else:
+        elif self.length is not None:
             length = self.length
+        else:
+            length = len(value)
         return struct.pack('%ds' % length, value)
 
 
@@ -248,7 +268,10 @@ class FixedList(Field):
     def value_to_bytes(self, obj, values, default_endianness=DEFAULT_ENDIANNESS):
         result = ''
         for value in values:
-            result += value.serialise(default_endianness=default_endianness)
+            if isinstance(self.member_type, Field):
+                result += self.member_type.value_to_bytes(obj, value, default_endianness=DEFAULT_ENDIANNESS)
+            else:
+                result += value.serialise(default_endianness=default_endianness)
         return result
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
@@ -261,7 +284,12 @@ class FixedList(Field):
 
         i = 0
         while offset + length < len(buffer) and (max_count is None or i < max_count):
-            value, item_length = self.member_type.parse(buffer[offset+length:], default_endianness=DEFAULT_ENDIANNESS)
+            if isinstance(self.member_type, Field):
+                value, item_length = self.member_type.buffer_to_value(obj, buffer, offset+length,
+                                                                      default_endianness=DEFAULT_ENDIANNESS)
+            else:
+                value, item_length = self.member_type.parse(buffer[offset+length:],
+                                                            default_endianness=DEFAULT_ENDIANNESS)
             results.append(value)
             length += item_length
             i += 1
@@ -286,7 +314,8 @@ class BinaryArray(Field):
         if isinstance(self.length, Field):
             length = getattr(obj, self.length._name)
             return array.array('B', buffer[offset:offset+length]), length
-        else:
+        elif self.length is None:
             length = len(buffer) - offset
             return array.array('B', buffer[offset:]), length
-
+        else:
+            return array.array('B', buffer[offset:offset+self.length]), self.length

@@ -1,5 +1,7 @@
 __author__ = 'katharine'
 
+from enum import IntEnum
+
 from base import PebblePacket
 from base.types import *
 
@@ -94,46 +96,125 @@ class BLEControl(PebblePacket):
     discoverable = Boolean()
     duration = Uint16()
 
-# Log messages
+# Firmware/hardware version
 
 
-class LogShippingControl(PebblePacket):
-    class Meta:
-        endpoint = 0x07D0
-        register = False
-
-    kind = Uint8(default=0x00)
-    level = Uint8()
+class WatchVersionRequest(PebblePacket):
+    pass
 
 
-class LogMessage(PebblePacket):
-    class Meta:
-        endpoint = 0x07D0
-
+class WatchFirmwareVersion(PebblePacket):
     timestamp = Uint32()
-    level = Uint8()
-    message_length = Uint8()
-    line_number = Uint16()
-    filename = FixedString(16)
-    message = FixedString(message_length)
+    version_tag = FixedString(32)
+    git_hash = FixedString(8)
+    is_recovery = Boolean()
+    hardware_platform = Uint8()
+    metadata_version = Uint8()
 
 
-class AppLogShippingControl(PebblePacket):
+class WatchVersionResponse(PebblePacket):
+    running = Embed(WatchFirmwareVersion)
+    recovery = Embed(WatchFirmwareVersion)
+    bootloader_timestamp = Uint32()
+    board = FixedString(9)
+    serial = FixedString(12)
+    bt_address = BinaryArray(6)
+    resource_crc = Uint32()
+    resource_timestamp = Uint32()
+    language = FixedString(6)
+    language_version = Uint16()
+    capabilities = Uint64(endianness='<')
+    is_unfaithful = Boolean()
+
+
+class WatchVersion(PebblePacket):
     class Meta:
-        endpoint = 0x07D6
-        register = False
+        endpoint = 0x10
 
-    enable = Boolean()
+    command = Uint8()
+    data = Union(command, {
+        0x00: WatchVersionRequest,
+        0x01: WatchVersionResponse,
+    })
+
+# Ping, pong.
 
 
-class AppLogMessage(PebblePacket):
+class Ping(PebblePacket):
+    idle = Boolean()
+
+
+class Pong(PebblePacket):
+    pass
+
+
+class PingPong(PebblePacket):
     class Meta:
-        endpoint = 0x07D6
+        endpoint = 2001
 
-    uuid = UUID()
-    timestamp = Uint32()
-    level = Uint8()
-    message_length = Uint8()
-    line_number = Uint16()
-    filename = FixedString(16)
-    message = FixedString(message_length)
+    command = Uint8()
+    cookie = Uint32()
+    message = Union(command, {
+        0: Ping,
+        1: Pong,
+    })
+
+# Reset
+
+
+class Reset(PebblePacket):
+    class Meta:
+        endpoint = 2003
+        endianness = '<'
+
+    class Command(IntEnum):
+        Reset = 0x00
+        DumpCore = 0x01
+        FactoryReset = 0x02
+        PRF = 0x03
+
+    command = Uint8(enum=Command)
+
+# Watch colour (on top of the former factory/system settings endpoints)
+
+
+class Model(IntEnum):
+    Unknown = 0
+    TintinBlack = 1
+    TintinWhite = 2
+    TintinRed = 3
+    TintinOrange = 4
+    TintinGrey = 5
+    BiancaSilver = 6
+    BiancaBlack = 7
+    TintinBlue = 8
+    TintinGreen = 9
+    TintinPink = 10
+    SnowyBlack = 11
+    SnowyWhite = 12
+    SnowyRed = 13
+
+
+class ModelRequest(PebblePacket):
+    _key = PascalString(default="mfg_color")
+
+
+class ModelResponse(PebblePacket):
+    length = Uint32()
+    data = BinaryArray(length=length)
+
+
+class ModelError(PebblePacket):
+    pass
+
+
+class WatchModel(PebblePacket):
+    class Meta:
+        endpoint = 5001
+
+    command = Uint8()
+    data = Union(command, {
+        0x00: ModelRequest,
+        0x01: ModelResponse,
+        0xff: ModelError,
+    })

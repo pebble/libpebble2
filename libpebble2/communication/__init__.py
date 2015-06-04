@@ -3,11 +3,13 @@ from __future__ import absolute_import
 __author__ = 'katharine'
 
 from enum import Enum
+import struct
 
 from .transports import BaseTransport, MessageTargetWatch
 from libpebble2.events import BaseEventHandler
 from libpebble2.protocol.base import PebblePacket
-from libpebble2.protocol.system import PhoneAppVersion, AppVersionResponse
+from libpebble2.protocol.system import (PhoneAppVersion, AppVersionResponse, WatchVersion, WatchVersionRequest,
+                                        WatchModel, ModelRequest, Model)
 
 _EventType = Enum('_EventType', ('Watch', 'Transport'))
 
@@ -24,6 +26,8 @@ class PebbleConnection(object):
         self.transport = transport
         self.event_handler = event_handler()
         self._register_internal_handlers()
+        self._watch_info = None
+        self._watch_model = None
 
     def connect(self):
         self.transport.connect()
@@ -81,3 +85,21 @@ class PebbleConnection(object):
             protocol_caps=0
         ))
         self.send_packet(packet)
+
+    @property
+    def watch_info(self):
+        if self._watch_info is None:
+            self.send_packet(WatchVersion(data=WatchVersionRequest()))
+            self._watch_info = self.read_from_endpoint(WatchVersion).data
+        return self._watch_info
+
+    @property
+    def watch_model(self):
+        if self._watch_model is None:
+            self.send_packet(WatchModel(data=ModelRequest()))
+            info_bytes = self.read_from_endpoint(WatchModel).data.data
+            if len(info_bytes) == 4:
+                self._watch_model = struct.unpack('>I', info_bytes)
+            else:
+                self._watch_model = Model.Unknown
+        return self._watch_model
