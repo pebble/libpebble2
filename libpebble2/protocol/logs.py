@@ -1,7 +1,11 @@
+from __future__ import absolute_import
 __author__ = 'katharine'
 
-from base import PebblePacket
-from base.types import *
+from .base import PebblePacket
+from .base.types import *
+
+__all__ = ["RequestLogs", "LogMessage", "LogMessageDone", "NoLogMessages", "LogShipping", "AppLogShippingControl",
+           "AppLogMessage"]
 
 # Flash log messages
 

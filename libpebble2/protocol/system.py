@@ -1,11 +1,17 @@
+from __future__ import absolute_import
 __author__ = 'katharine'
 
 from enum import IntEnum
 
-from base import PebblePacket
-from base.types import *
+from .base import PebblePacket
+from .base.types import *
 
 # Time manipulation
+
+__all__ = ["GetTimeRequest", "GetTimeResponse", "SetLocaltime", "SetUTC", "TimeMessage", "AppVersionRequest",
+           "AppVersionResponse", "PhoneAppVersion", "FirmwareUpdateStartResponse", "SystemMessage", "BLEControl",
+           "WatchVersionRequest", "WatchVersionResponse", "WatchFirmwareVersion", "WatchVersion", "Ping", "Pong",
+           "PingPong", "Reset", "Model", "ModelRequest", "ModelResponse", "ModelError", "WatchModel"]
 
 
 class GetTimeRequest(PebblePacket):

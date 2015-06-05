@@ -1,8 +1,12 @@
+from __future__ import absolute_import
 __author__ = 'katharine'
 
 import collections
 import struct
-from types import Field, DEFAULT_ENDIANNESS
+
+from .types import Field, DEFAULT_ENDIANNESS
+
+__all__ = ["PebblePacket"]
 
 _PacketRegistry = {}
 

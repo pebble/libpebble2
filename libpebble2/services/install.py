@@ -1,8 +1,6 @@
 from __future__ import absolute_import
 __author__ = 'katharine'
 
-import uuid
-
 from .blobdb import BlobDBClient, BlobDatabaseID, SyncWrapper, BlobStatus
 from .putbytes import PutBytes, PutBytesType
 from libpebble2.events import EventSourceMixin

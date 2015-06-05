@@ -1,9 +1,12 @@
+from __future__ import absolute_import
 __author__ = 'katharine'
 
 from enum import IntEnum
 
-from base import PebblePacket
-from base.types import *
+from .base import PebblePacket
+from .base.types import *
+
+__all__ = ["ScreenshotRequest", "ScreenshotResponse", "ScreenshotHeader"]
 
 
 class ScreenshotRequest(PebblePacket):

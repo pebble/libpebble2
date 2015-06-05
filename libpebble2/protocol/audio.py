@@ -1,9 +1,13 @@
+from __future__ import absolute_import
 __author__ = 'katharine'
 
 from enum import IntEnum
 
-from base import PebblePacket
-from base.types import *
+from .base import PebblePacket
+from .base.types import *
+
+__all__ = ["AudioCodec", "SpeexEncoderInfo", "StartTransfer", "EncoderFrame", "DataTransfer", "StopTransfer",
+           "AudioStream"]
 
 
 class AudioCodec(IntEnum):
