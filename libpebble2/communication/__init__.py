@@ -62,6 +62,9 @@ class PebbleConnection(object):
     def read_from_endpoint(self, endpoint):
         return self.event_handler.wait_for_event((_EventType.Watch, endpoint))
 
+    def get_endpoint_queue(self, endpoint):
+        return self.event_handler.queue_events((_EventType.Watch, endpoint))
+
     def read_transport_message(self, origin, message_type):
         return self.event_handler.wait_for_event((_EventType.Transport, origin, message_type))
 

@@ -20,7 +20,27 @@ class BaseEventHandler(object):
         pass
 
     @abstractmethod
+    def queue_events(self, event):
+        pass
+
+    @abstractmethod
     def broadcast_event(self, event, *args):
+        pass
+
+
+class BaseEventQueue(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def close(self):
+        pass
+
+    @abstractmethod
+    def get(self):
+        pass
+
+    @abstractmethod
+    def __iter__(self):
         pass
 
 

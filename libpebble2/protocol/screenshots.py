@@ -35,3 +35,4 @@ class ScreenshotHeader(PebblePacket):
     version = Uint32()
     width = Uint32()
     height = Uint32()
+    data = BinaryArray()

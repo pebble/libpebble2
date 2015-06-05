@@ -3,8 +3,9 @@ from __future__ import absolute_import
 __author__ = 'katharine'
 
 import threading
+import Queue
 
-from . import BaseEventHandler
+from . import BaseEventHandler, BaseEventQueue
 
 
 class ThreadedEventHandler(BaseEventHandler):
@@ -31,11 +32,13 @@ class ThreadedEventHandler(BaseEventHandler):
     def wait_for_event(self, event):
         return _BlockingEventWait(self, event).wait()
 
+    def queue_events(self, event):
+        return _QueuedEventWait(self, event)
+
     def broadcast_event(self, event, *args):
         # TODO: This could maybe deadlock?
-        with self._handler_lock:
-            for handler in self._handlers.get(event, {}).values():
-                handler(*args)
+        for handler in self._handlers.get(event, {}).values():
+            handler(*args)
 
 
 class _BlockingEventWait(object):
@@ -53,3 +56,22 @@ class _BlockingEventWait(object):
     def wait(self):
         self.block.wait()
         return self.result
+
+
+class _QueuedEventWait(BaseEventQueue):
+    def __init__(self, events, event):
+        self.queue = Queue.Queue()
+        self.event_handler = events
+        self.handle = self.event_handler.register_handler(event, self._handle_event)
+
+    def _handle_event(self, arg):
+        self.queue.put(arg)
+
+    def close(self):
+        self.event_handler.unregister_handler(self.handle)
+
+    def get(self):
+        return self.queue.get()
+
+    def __iter__(self):
+        yield self.get()
