@@ -50,7 +50,7 @@ class LogShipping(PebblePacket):
 
 class AppLogShippingControl(PebblePacket):
     class Meta:
-        endpoint = 2003
+        endpoint = 2006
         register = False
 
     enable = Boolean()
@@ -58,7 +58,7 @@ class AppLogShippingControl(PebblePacket):
 
 class AppLogMessage(PebblePacket):
     class Meta:
-        endpoint = 2003
+        endpoint = 2006
 
     uuid = UUID()
     timestamp = Uint32()
