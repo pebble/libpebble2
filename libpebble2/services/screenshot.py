@@ -32,6 +32,7 @@ class Screenshot(EventSourceMixin):
         while len(data) < expected_size:
             data += queue.get().data
             self._broadcast_event("progress", len(data), expected_size)
+        queue.close()
         return self._decode_image(header, data)
 
     @classmethod
