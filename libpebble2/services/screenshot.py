@@ -3,13 +3,9 @@ __author__ = 'katharine'
 
 from array import array
 
-from libpebble2.exceptions import PebbleError
+from libpebble2.exceptions import ScreenshotError
 from libpebble2.events import EventSourceMixin
 from libpebble2.protocol.screenshots import *
-
-
-class ScreenshotError(PebbleError):
-    pass
 
 
 class Screenshot(EventSourceMixin):

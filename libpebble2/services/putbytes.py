@@ -4,15 +4,11 @@ __author__ = 'katharine'
 from enum import IntEnum
 
 from libpebble2.events import EventSourceMixin
-from libpebble2.exceptions import PebbleError
+from libpebble2.exceptions import PutBytesError
 from libpebble2.protocol import transfers
 from libpebble2.util import stm32_crc
 
-__all__ = ["PutBytes", "PutBytesError", "PutBytesType"]
-
-
-class PutBytesError(PebbleError):
-    pass
+__all__ = ["PutBytes", "PutBytesType"]
 
 
 class PutBytesType(IntEnum):

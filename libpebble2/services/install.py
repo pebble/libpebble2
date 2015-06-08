@@ -4,15 +4,11 @@ __author__ = 'katharine'
 from .blobdb import BlobDBClient, BlobDatabaseID, SyncWrapper, BlobStatus
 from .putbytes import PutBytes, PutBytesType
 from libpebble2.events import EventSourceMixin
-from libpebble2.exceptions import PebbleError
+from libpebble2.exceptions import AppInstallError
 from libpebble2.protocol.apps import AppMetadata, AppRunState, AppRunStateStart, AppFetchRequest, AppFetchResponse, AppFetchStatus
 from libpebble2.util.bundle import PebbleBundle
 
-__all__ = ["AppInstaller", "AppInstallError"]
-
-
-class AppInstallError(PebbleError):
-    pass
+__all__ = ["AppInstaller"]
 
 
 class AppInstaller(EventSourceMixin):

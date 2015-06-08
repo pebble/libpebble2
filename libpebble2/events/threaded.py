@@ -6,6 +6,7 @@ import threading
 import Queue
 
 from . import BaseEventHandler, BaseEventQueue
+from libpebble2.exceptions import TimeoutError
 
 
 class ThreadedEventHandler(BaseEventHandler):
@@ -53,8 +54,9 @@ class _BlockingEventWait(object):
         self.event_handler.unregister_handler(self.handle)
         self.block.set()
 
-    def wait(self):
-        self.block.wait()
+    def wait(self, timeout=10):
+        if not self.block.wait(timeout=timeout):
+            raise TimeoutError()
         return self.result
 
 
@@ -70,8 +72,11 @@ class _QueuedEventWait(BaseEventQueue):
     def close(self):
         self.event_handler.unregister_handler(self.handle)
 
-    def get(self):
-        return self.queue.get()
+    def get(self, timeout=10):
+        try:
+            return self.queue.get(timeout=timeout)
+        except Queue.Empty:
+            raise TimeoutError()
 
     def __iter__(self):
         yield self.get()

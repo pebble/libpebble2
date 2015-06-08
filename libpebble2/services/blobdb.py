@@ -95,8 +95,8 @@ class SyncWrapper(object):
         self.result = None
         method(*args, callback=self.callback, **kwargs)
 
-    def wait(self):
-        self.event.wait()
+    def wait(self, timeout=10):
+        self.event.wait(timeout=timeout)
         return self.result
 
     def callback(self, *args, **kwargs):
