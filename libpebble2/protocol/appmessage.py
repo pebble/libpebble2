@@ -11,6 +11,12 @@ __all__ = ["AppMessageTuple", "AppMessagePush", "AppMessageACK", "AppMessageNACK
 
 
 class AppMessageTuple(PebblePacket):
+    class Type(IntEnum):
+        ByteArray = 0
+        CString = 1
+        Uint = 2
+        Int = 3
+
     key = Uint32()
     type = Uint8()
     length = Uint16()
