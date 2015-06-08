@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 __author__ = 'katharine'
 
+from collections import namedtuple
 from enum import Enum
 import struct
 
@@ -12,6 +13,8 @@ from libpebble2.protocol.system import (PhoneAppVersion, AppVersionResponse, Wat
                                         WatchModel, ModelRequest, Model)
 
 _EventType = Enum('_EventType', ('Watch', 'Transport'))
+
+FirmwareVersion = namedtuple('FirmwareVersion', ('major', 'minor', 'patch', 'suffix'))
 
 
 class PebbleConnection(object):
@@ -95,6 +98,19 @@ class PebbleConnection(object):
             self.send_packet(WatchVersion(data=WatchVersionRequest()))
             self._watch_info = self.read_from_endpoint(WatchVersion).data
         return self._watch_info
+
+    @property
+    def firmware_version(self):
+        version = self.watch_info.running.version_tag[1:]
+        parts = version.split('-', 1)
+        points = [int(x) for x in parts[0].split('.')]
+        while len(points) < 3:
+            points.append(0)
+        if len(parts) == 2:
+            suffix = parts[1]
+        else:
+            suffix = ''
+        return FirmwareVersion(*(points + [suffix]))
 
     @property
     def watch_model(self):

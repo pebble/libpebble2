@@ -260,14 +260,20 @@ class PascalList(Field):
 
 
 class FixedList(Field):
-    def __init__(self, member_type, count=None):
+    def __init__(self, member_type, count=None, length=None):
         self.member_type = member_type
         self.count = count
+        self.length = length
         super(FixedList, self).__init__()
 
     def prepare(self, obj, value):
         if isinstance(self.count, Field):
             setattr(obj, self.count._name, len(value))
+
+        if isinstance(self.length, Field):
+            current = getattr(obj, self.length._name) or 0
+            setattr(obj, self.length._name, current + sum(len(x.serialise()) for x in value))
+
 
     def value_to_bytes(self, obj, values, default_endianness=DEFAULT_ENDIANNESS):
         result = ''
