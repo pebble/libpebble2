@@ -45,8 +45,8 @@ class AppMessage(PebblePacket):
     transaction_id = Uint8()
     data = Union(command, {
         0x01: AppMessagePush,
-        0x03: AppMessageACK,
-        0x04: AppMessageNACK,
+        0xff: AppMessageACK,
+        0x7f: AppMessageNACK,
     })
 
 

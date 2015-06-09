@@ -44,6 +44,7 @@ class PebbleConnection(object):
 
     def handle_watch_message(self, message):
         while len(message) >= 4:
+            self.event_handler.broadcast_event("raw_inbound", message)
             packet, length = PebblePacket.parse_message(message)
             message = message[length:]
             self.event_handler.broadcast_event((_EventType.Watch, type(packet)), packet)
@@ -59,6 +60,12 @@ class PebbleConnection(object):
     def register_endpoint(self, endpoint, handler):
         return self.event_handler.register_handler((_EventType.Watch, endpoint), handler)
 
+    def register_raw_outbound_handler(self, handler):
+        return self.event_handler.register_handler("raw_outbound", handler)
+
+    def register_raw_inbound_handler(self, handler):
+        return self.event_handler.register_handler("raw_inbound", handler)
+
     def unregister_endpoint(self, handle):
         return self.event_handler.unregister_handler(handle)
 
@@ -73,7 +80,11 @@ class PebbleConnection(object):
 
     def send_packet(self, packet):
         serialised = packet.serialise_packet()
+        self.event_handler.broadcast_event("raw_outbound", serialised)
         self.transport.send_packet(serialised)
+
+    def send_raw(self, message):
+        self.transport.send_packet(message)
 
     def _register_internal_handlers(self):
         if self.transport.must_initialise:
@@ -88,7 +99,7 @@ class PebbleConnection(object):
             major_version=3,
             minor_version=0,
             bugfix_version=0,
-            protocol_caps=0
+            protocol_caps=0xFFFFFFFFFFFFFFFF
         ))
         self.send_packet(packet)
 

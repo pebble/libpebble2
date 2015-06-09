@@ -11,4 +11,5 @@ from .music import *
 from .screenshots import *
 from .phone import *
 from .system import *
+from .timeline import *
 from .transfers import *

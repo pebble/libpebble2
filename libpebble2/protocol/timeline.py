@@ -11,7 +11,8 @@ from enum import IntEnum
 from .base import PebblePacket
 from .base.types import *
 
-__all__ = ["TimelineAttribute", "TimelineAction", "TimelineItem"]
+__all__ = ["TimelineAttribute", "TimelineAction", "TimelineItem",
+           "TimelineActionEndpoint", "ActionResponse", "InvokeAction"]
 
 
 class TimelineAttribute(PebblePacket):
@@ -32,6 +33,8 @@ class TimelineAction(PebblePacket):
         Snooze = 0x06
         OpenWatchapp = 0x07
         Empty = 0x08
+        Remove = 0x09
+        OpenPin = 0x0a
 
     action_id = Uint8()
     type = Uint8(enum=Type)
@@ -60,3 +63,32 @@ class TimelineItem(PebblePacket):
     action_count = Uint8()
     attributes = FixedList(TimelineAttribute, count=attribute_count, length=data_length)
     actions = FixedList(TimelineAction, count=action_count, length=data_length)
+
+
+class InvokeAction(PebblePacket):
+    item_id = UUID()
+    action_id = Uint8()
+    num_attributes = Uint8()
+    attributes = FixedList(TimelineAttribute, count=num_attributes)
+
+
+class ActionResponse(PebblePacket):
+    class Response(IntEnum):
+        ACK = 0
+        NACK = 1
+    item_id = UUID()
+    response = Uint8(enum=Response)
+    num_attributes = Uint8()
+    attributes = FixedList(TimelineAttribute, count=num_attributes)
+
+
+class TimelineActionEndpoint(PebblePacket):
+    class Meta:
+        endpoint = 0x2CB0
+        endianness = '<'
+
+    command = Uint8()
+    data = Union(command, {
+        0x02: InvokeAction,
+        0x11: ActionResponse
+    })

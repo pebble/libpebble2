@@ -77,3 +77,11 @@ class QemuPacket(PebblePacket):
         8: QemuButton,
     }, length=length)
     footer = Uint16(default=FOOTER_SIGNATURE)
+
+
+class QemuRawPacket(PebblePacket):
+    signature = Uint16(default=HEADER_SIGNATURE)
+    protocol = Uint16()
+    length = Uint16()
+    data = BinaryArray(length=length)
+    footer = Uint16(default=FOOTER_SIGNATURE)

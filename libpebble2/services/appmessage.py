@@ -25,7 +25,7 @@ class AppMessageService(EventSourceMixin):
         self._current_txid = 1
         self._pending_messages = {}
         super(AppMessageService, self).__init__(events)
-        self._pebble.register_endpoint(AppMessage, self._handle_message)
+        self._handle = self._pebble.register_endpoint(AppMessage, self._handle_message)
 
     def _handle_message(self, packet):
         assert isinstance(packet, AppMessage)
@@ -68,6 +68,10 @@ class AppMessageService(EventSourceMixin):
         message.data = AppMessagePush(uuid=target_app, dictionary=tuples)
         self._pending_messages[tid] = target_app
         self._pebble.send_packet(message)
+        return tid
+
+    def shutdown(self):
+        self._pebble.unregister_endpoint(self._handle)
 
     def _get_txid(self):
         self._current_txid += 1

@@ -4,13 +4,14 @@ __author__ = 'katharine'
 import socket
 
 from .. import BaseTransport, MessageTarget, MessageTargetWatch
-from .protocol import QemuPacket, QemuSPP, HEADER_SIGNATURE, FOOTER_SIGNATURE
+from .protocol import QemuPacket, QemuSPP, QemuRawPacket, HEADER_SIGNATURE, FOOTER_SIGNATURE
 from libpebble2.protocol.base.types import PacketDecodeError
 
 
 class QemuMessageTarget(MessageTarget):
-    def __init__(self, protocol):
+    def __init__(self, protocol, raw=False):
         self.protocol = protocol
+        self.raw = raw
 
 
 class QemuTransport(BaseTransport):
@@ -53,8 +54,11 @@ class QemuTransport(BaseTransport):
 
     def send_packet(self, message, target=MessageTargetWatch()):
         if isinstance(target, MessageTargetWatch):
-            data = QemuSPP(payload=message)
+            self.socket.send(QemuPacket(data=QemuSPP(payload=message)).serialise())
+        elif isinstance(target, QemuMessageTarget):
+            if not target.raw:
+                self.socket.send(QemuPacket(data=message).serialise())
+            else:
+                self.socket.send(QemuRawPacket(protocol=target.protocol, data=message))
         else:
-            data = message
-        packet = QemuPacket(data=data)
-        self.socket.send(packet.serialise())
+            assert False
