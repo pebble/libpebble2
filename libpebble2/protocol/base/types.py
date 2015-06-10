@@ -7,7 +7,7 @@ import uuid
 
 __all__ = ["DEFAULT_ENDIANNESS", "PacketDecodeError", "Field", "Int8", "Uint8", "Int16", "Uint16", "Int32", "Uint32",
            "Int64", "Uint64", "Boolean", "UUID", "Union", "Embed", "Padding", "PascalString", "NullTerminatedString",
-           "FixedString", "PascalList", "FixedList", "BinaryArray"]
+           "FixedString", "PascalList", "FixedList", "BinaryArray", "Optional"]
 
 DEFAULT_ENDIANNESS = '!'
 
@@ -145,7 +145,7 @@ class Embed(Field):
         return value.serialise(default_endianness=default_endianness)
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
-        return self.packet.parse(buffer[offset:], default_endianness=DEFAULT_ENDIANNESS)
+        return self.packet.parse(buffer[offset:], default_endianness=default_endianness)
 
 
 class Padding(Field):
@@ -253,7 +253,7 @@ class PascalList(Field):
                 raise PacketDecodeError("{}: couldn't parse entry length: {}".format(self.type, e))
             length += 1
             results.append(self.member_type.parse(buffer[offset+length:offset+length+item_length],
-                                                  default_endianness=DEFAULT_ENDIANNESS)[0])
+                                                  default_endianness=default_endianness)[0])
             length += item_length
             i += 1
         return results, length
@@ -279,7 +279,7 @@ class FixedList(Field):
         result = ''
         for value in values:
             if isinstance(self.member_type, Field):
-                result += self.member_type.value_to_bytes(obj, value, default_endianness=DEFAULT_ENDIANNESS)
+                result += self.member_type.value_to_bytes(obj, value, default_endianness=default_endianness)
             else:
                 result += value.serialise(default_endianness=default_endianness)
         return result
@@ -296,10 +296,10 @@ class FixedList(Field):
         while offset + length < len(buffer) and (max_count is None or i < max_count):
             if isinstance(self.member_type, Field):
                 value, item_length = self.member_type.buffer_to_value(obj, buffer, offset+length,
-                                                                      default_endianness=DEFAULT_ENDIANNESS)
+                                                                      default_endianness=default_endianness)
             else:
                 value, item_length = self.member_type.parse(buffer[offset+length:],
-                                                            default_endianness=DEFAULT_ENDIANNESS)
+                                                            default_endianness=default_endianness)
             results.append(value)
             length += item_length
             i += 1
@@ -329,3 +329,21 @@ class BinaryArray(Field):
             return array.array('B', buffer[offset:]), length
         else:
             return array.array('B', buffer[offset:offset+self.length]), self.length
+
+
+class Optional(Field):
+    def __init__(self, actual_field, **kwargs):
+        self.field = actual_field
+        super(Optional, self).__init__(**kwargs)
+
+    def prepare(self, *args):
+        self.field.prepare(*args)
+
+    def value_to_bytes(self, *args, **kwargs):
+        return self.field.value_to_bytes(*args, **kwargs)
+
+    def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
+        if len(buffer) <= offset:
+            return None, 0
+        else:
+            return self.field.buffer_to_value(obj, buffer, offset, default_endianness=default_endianness)

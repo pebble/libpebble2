@@ -25,7 +25,8 @@ class AppMessageTuple(PebblePacket):
 
 class AppMessagePush(PebblePacket):
     uuid = UUID()
-    dictionary = PascalList(AppMessageTuple)
+    count = Uint8()
+    dictionary = FixedList(AppMessageTuple, count=count)
 
 
 class AppMessageACK(PebblePacket):

@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import print_function, absolute_import
 __author__ = 'katharine'
 
 import collections
@@ -23,6 +23,12 @@ class PacketType(type):
             del dct['Meta']
 
         # For each Field, add it to our mapping, then set the exposed value to its default value.
+        # We go through the classes we inherited from to add anything in there.
+        # This means that inheritance works, with inherited classes appending their fields to the end.
+        dct['_type_mapping'] = collections.OrderedDict()
+        for base in bases:
+            if hasattr(base, '_type_mapping'):
+                dct['_type_mapping'].update(getattr(base, '_type_mapping'))
         for k, v in dct.items():
             if not isinstance(v, Field):
                 continue
@@ -31,7 +37,7 @@ class PacketType(type):
             dct[k] = v._default
         # Put the results into an ordered dict. We sort on field_id to ensure that our dict ends up
         # in the correct order.
-        dct['_type_mapping'] = collections.OrderedDict(sorted(mapping, key=lambda x: x[1].field_id))
+        dct['_type_mapping'].update(collections.OrderedDict(sorted(mapping, key=lambda x: x[1].field_id)))
         return super(PacketType, mcs).__new__(mcs, name, bases, dct)
 
     def __init__(cls, name, bases, dct):
@@ -94,7 +100,11 @@ class PebblePacket(object):
         if hasattr(cls, '_Meta'):
             default_endianness = cls._Meta.get('endianness', default_endianness)
         for k, v in cls._type_mapping.iteritems():
-            value, length = v.buffer_to_value(obj, message, offset, default_endianness=default_endianness)
+            try:
+                value, length = v.buffer_to_value(obj, message, offset, default_endianness=default_endianness)
+            except Exception:
+                print("Exception decoding {}.{}".format(cls.__name__, k))
+                raise
             offset += length
             setattr(obj, k, value)
         return obj, offset

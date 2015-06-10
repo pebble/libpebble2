@@ -130,7 +130,7 @@ class WatchVersionResponse(PebblePacket):
     language = FixedString(6)
     language_version = Uint16()
     capabilities = Uint64(endianness='<')
-    is_unfaithful = Boolean()
+    is_unfaithful = Optional(Boolean())
 
 
 class WatchVersion(PebblePacket):

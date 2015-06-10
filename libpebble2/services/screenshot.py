@@ -18,13 +18,14 @@ class Screenshot(EventSourceMixin):
         return self._read_screenshot()
 
     def _read_screenshot(self):
-        data = self._pebble.read_from_endpoint(ScreenshotResponse).data
+        queue = self._pebble.get_endpoint_queue(ScreenshotResponse)
+        data = queue.get().data
         header = ScreenshotHeader.parse(data)[0]
         if header.response_code != ScreenshotHeader.ResponseCode.OK:
+            queue.close()
             raise ScreenshotError("Screenshot failed: {!s}".format(header.response_code))
         data = header.data
         expected_size = self._get_expected_bytes(header)
-        queue = self._pebble.get_endpoint_queue(ScreenshotResponse)
         while len(data) < expected_size:
             data += queue.get().data
             self._broadcast_event("progress", len(data), expected_size)
@@ -54,7 +55,7 @@ class Screenshot(EventSourceMixin):
         for row in xrange(header.height):
             row_values = []
             for column in xrange(header.width):
-                pixel = (data[row*row_bytes + column//8] >> (7 - (column % 8))) & 1
+                pixel = (data[row*row_bytes + column//8] >> (column % 8)) & 1
                 row_values.extend([pixel * 255] * 3)
             output.append(array('B', row_values))
         return output

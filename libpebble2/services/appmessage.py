@@ -20,12 +20,13 @@ class AppMessageService(EventSourceMixin):
         (AppMessageTuple.Type.Uint, 4): 'I',
     }
 
-    def __init__(self, pebble, events):
+    def __init__(self, pebble, events, message_type=AppMessage):
         self._pebble = pebble
         self._current_txid = 1
         self._pending_messages = {}
+        self._message_type = message_type
         super(AppMessageService, self).__init__(events)
-        self._handle = self._pebble.register_endpoint(AppMessage, self._handle_message)
+        self._handle = self._pebble.register_endpoint(self._message_type, self._handle_message)
 
     def _handle_message(self, packet):
         assert isinstance(packet, AppMessage)
@@ -55,7 +56,7 @@ class AppMessageService(EventSourceMixin):
 
     def send_message(self, target_app, dictionary):
         tid = self._get_txid()
-        message = AppMessage(transaction_id=tid)
+        message = self._message_type(transaction_id=tid)
         tuples = []
         for k, v in dictionary.iteritems():
             if isinstance(v, AppMessageNumber):
