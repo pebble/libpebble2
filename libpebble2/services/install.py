@@ -1,11 +1,9 @@
 from __future__ import absolute_import
 __author__ = 'katharine'
 
-import uuid
-
 from .blobdb import BlobDBClient, BlobDatabaseID, SyncWrapper, BlobStatus
 from .putbytes import PutBytes, PutBytesType
-from libpebble2.events import EventSourceMixin
+from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.exceptions import AppInstallError
 from libpebble2.protocol.apps import AppMetadata, AppRunState, AppRunStateStart, AppFetchRequest, AppFetchResponse, AppFetchStatus
 from libpebble2.protocol.legacy2 import *
@@ -16,11 +14,10 @@ __all__ = ["AppInstaller"]
 
 
 class AppInstaller(EventSourceMixin):
-    def __init__(self, pebble, event_handler, pbw_path, blobdb_client=None):
+    def __init__(self, pebble, pbw_path, blobdb_client=None):
         self._pebble = pebble
-        self._event_handler = event_handler
-        self._blobdb = blobdb_client or BlobDBClient(pebble, event_handler)
-        EventSourceMixin.__init__(self, self._event_handler)
+        self._blobdb = blobdb_client or BlobDBClient(pebble)
+        EventSourceMixin.__init__(self)
         self._prepare(pbw_path)
 
     def _prepare(self, pbw_path):
@@ -80,7 +77,7 @@ class AppInstaller(EventSourceMixin):
             self._send_part(PutBytesType.Worker, worker, app_fetch.app_id)
 
     def _send_part(self, type, object, install_id):
-        pb = PutBytes(self._pebble, self._event_handler, type, object, app_install_id=install_id)
+        pb = PutBytes(self._pebble, type, object, app_install_id=install_id)
         pb.register_handler("progress", self._handle_progress)
         pb.send()
 
@@ -121,14 +118,14 @@ class AppInstaller(EventSourceMixin):
         self._pebble.read_from_endpoint(LegacyAppInstallResponse)
 
         # Launch it (which is painful on 2.x).
-        appmessage = AppMessageService(self._pebble, self._event_handler, message_type=LegacyAppLaunchMessage)
+        appmessage = AppMessageService(self._pebble, message_type=LegacyAppLaunchMessage)
         appmessage.send_message(app_uuid, {
             LegacyAppLaunchMessage.Keys.RunState: AMUint8(LegacyAppLaunchMessage.States.Running)
         })
         appmessage.shutdown()
 
     def _send_part_legacy2(self, type, object, bank):
-        pb = PutBytes(self._pebble, self._event_handler, type, object, bank=bank)
+        pb = PutBytes(self._pebble, type, object, bank=bank)
         pb.register_handler("progress", self._handle_progress)
         pb.send()
 

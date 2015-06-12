@@ -2,11 +2,14 @@ from __future__ import print_function, absolute_import
 __author__ = 'katharine'
 
 import collections
+import logging
 import struct
 
 from .types import Field, DEFAULT_ENDIANNESS
 
 __all__ = ["PebblePacket"]
+
+logger = logging.getLogger("libpebble2.protocol")
 
 _PacketRegistry = {}
 
@@ -103,7 +106,7 @@ class PebblePacket(object):
             try:
                 value, length = v.buffer_to_value(obj, message, offset, default_endianness=default_endianness)
             except Exception:
-                print("Exception decoding {}.{}".format(cls.__name__, k))
+                logger.warning("Exception decoding {}.{}".format(cls.__name__, k))
                 raise
             offset += length
             setattr(obj, k, value)

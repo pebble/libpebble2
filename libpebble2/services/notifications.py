@@ -4,6 +4,7 @@ __author__ = 'katharine'
 from libpebble2.protocol.blobdb import BlobDatabaseID
 from libpebble2.protocol.legacy2 import *
 from libpebble2.protocol.timeline import *
+from libpebble2.services.blobdb import BlobDBClient
 
 import struct
 import time
@@ -16,7 +17,7 @@ NotificationSource = LegacyNotification.Source
 class Notifications(object):
     def __init__(self, pebble, blobdb):
         self._pebble = pebble
-        self._blobdb = blobdb
+        self._blobdb = blobdb or BlobDBClient(pebble)
 
     def send_notification(self, subject="", message="", sender="", source=None):
         if self._pebble.firmware_version.major < 3:

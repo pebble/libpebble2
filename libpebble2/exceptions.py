@@ -19,3 +19,11 @@ class ScreenshotError(PebbleError):
 
 class TimeoutError(PebbleError):
     pass
+
+
+class PacketDecodeError(PebbleError):
+    pass
+
+
+class ConnectionError(PebbleError):
+    pass

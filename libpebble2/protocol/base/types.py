@@ -5,15 +5,13 @@ import array
 import struct
 import uuid
 
+from libpebble2.exceptions import PacketDecodeError
+
 __all__ = ["DEFAULT_ENDIANNESS", "PacketDecodeError", "Field", "Int8", "Uint8", "Int16", "Uint16", "Int32", "Uint32",
            "Int64", "Uint64", "Boolean", "UUID", "Union", "Embed", "Padding", "PascalString", "NullTerminatedString",
            "FixedString", "PascalList", "FixedList", "BinaryArray", "Optional"]
 
 DEFAULT_ENDIANNESS = '!'
-
-
-class PacketDecodeError(Exception):
-    pass
 
 
 class Field(object):

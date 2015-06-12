@@ -20,6 +20,10 @@ class BaseTransport(object):
     def must_initialise(self):
         pass
 
+    @abstractproperty
+    def connected(self):
+        pass
+
     @abstractmethod
     def connect(self):
         pass

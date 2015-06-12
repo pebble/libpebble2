@@ -4,13 +4,18 @@ __author__ = 'katharine'
 
 from collections import namedtuple
 from enum import Enum
+import logging
 import struct
+import threading
 
 from .transports import BaseTransport, MessageTargetWatch
-from libpebble2.events import BaseEventHandler
+from libpebble2.events.threaded import ThreadedEventHandler
+from libpebble2.exceptions import PacketDecodeError
 from libpebble2.protocol.base import PebblePacket
 from libpebble2.protocol.system import (PhoneAppVersion, AppVersionResponse, WatchVersion, WatchVersionRequest,
                                         WatchModel, ModelRequest, Model)
+
+logger = logging.getLogger("libpebble2.communication")
 
 _EventType = Enum('_EventType', ('Watch', 'Transport'))
 
@@ -18,16 +23,14 @@ FirmwareVersion = namedtuple('FirmwareVersion', ('major', 'minor', 'patch', 'suf
 
 
 class PebbleConnection(object):
-    def __init__(self, transport, event_handler):
+    def __init__(self, transport):
         """
         Low-level connection to a pebble; deals in terms of PebblePackets.
         :param transport: BaseTransport
-        :param event_handler: BaseEventHandler
         """
         assert isinstance(transport, BaseTransport)
-        assert issubclass(event_handler, BaseEventHandler)
         self.transport = transport
-        self.event_handler = event_handler()
+        self.event_handler = ThreadedEventHandler()
         self._register_internal_handlers()
         self._watch_info = None
         self._watch_model = None
@@ -35,12 +38,29 @@ class PebbleConnection(object):
     def connect(self):
         self.transport.connect()
 
+    @property
+    def connected(self):
+        return self.transport.connected
+
     def pump_reader(self):
         origin, message = self.transport.read_packet()
         if isinstance(origin, MessageTargetWatch):
             self.handle_watch_message(message)
         else:
             self.broadcast_transport_message(origin, message)
+
+    def run_sync(self):
+        while self.connected:
+            try:
+                self.pump_reader()
+            except PacketDecodeError as e:
+                logger.warning("Packet decode failed: %s", e)
+
+    def run_async(self):
+        thread = threading.Thread(target=self.run_sync)
+        thread.daemon = True
+        thread.name = "PebbleConnection"
+        thread.start()
 
     def handle_watch_message(self, message):
         while len(message) >= 4:

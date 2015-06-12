@@ -3,7 +3,7 @@ __author__ = 'katharine'
 
 from enum import IntEnum
 
-from libpebble2.events import EventSourceMixin
+from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.exceptions import PutBytesError
 from libpebble2.protocol import transfers
 from libpebble2.util import stm32_crc
@@ -22,7 +22,7 @@ class PutBytesType(IntEnum):
 
 
 class PutBytes(EventSourceMixin):
-    def __init__(self, pebble, event_handler, object_type, object, bank=None, filename="", app_install_id=None):
+    def __init__(self, pebble, object_type, object, bank=None, filename="", app_install_id=None):
         self._pebble = pebble
         self._object_type = object_type
         self._object = object
@@ -31,7 +31,7 @@ class PutBytes(EventSourceMixin):
         self._app_install_id = app_install_id
         if app_install_id is not None:
             self._object_type |= (1 << 7)
-        EventSourceMixin.__init__(self, event_handler)
+        EventSourceMixin.__init__(self)
 
     def send(self):
         # Prepare the watch to receive something.

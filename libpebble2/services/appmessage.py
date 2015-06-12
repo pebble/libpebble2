@@ -4,7 +4,7 @@ __author__ = 'katharine'
 from array import array
 import struct
 
-from libpebble2.events import EventSourceMixin
+from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.protocol.appmessage import *
 
 __all__ = ["AppMessageService", "Uint8", "Uint16", "Uint32", "Int8", "Int16", "Int32", "CString", "ByteArray"]
@@ -20,12 +20,12 @@ class AppMessageService(EventSourceMixin):
         (AppMessageTuple.Type.Uint, 4): 'I',
     }
 
-    def __init__(self, pebble, events, message_type=AppMessage):
+    def __init__(self, pebble, message_type=AppMessage):
         self._pebble = pebble
         self._current_txid = 1
         self._pending_messages = {}
         self._message_type = message_type
-        super(AppMessageService, self).__init__(events)
+        super(AppMessageService, self).__init__()
         self._handle = self._pebble.register_endpoint(self._message_type, self._handle_message)
 
     def _handle_message(self, packet):

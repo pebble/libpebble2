@@ -3,15 +3,15 @@ __author__ = 'katharine'
 
 from array import array
 
+from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.exceptions import ScreenshotError
-from libpebble2.events import EventSourceMixin
 from libpebble2.protocol.screenshots import *
 
 
 class Screenshot(EventSourceMixin):
-    def __init__(self, pebble, event_class):
+    def __init__(self, pebble):
         self._pebble = pebble
-        super(Screenshot, self).__init__(event_class)
+        super(Screenshot, self).__init__()
 
     def grab_image(self):
         self._pebble.send_packet(ScreenshotRequest())

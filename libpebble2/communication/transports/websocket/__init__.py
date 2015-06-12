@@ -25,6 +25,10 @@ class WebsocketTransport(BaseTransport):
     def connect(self):
         self.ws = websocket.create_connection(self.url)
 
+    @property
+    def connected(self):
+        return self.ws is not None and self.ws.connected
+
     def send_packet(self, message, target=MessageTargetWatch()):
         handlers = {
             MessageTargetWatch: self._send_to_watch,

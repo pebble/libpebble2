@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 __author__ = 'katharine'
 
+from enum import IntEnum
+
 from .base import PebblePacket
 from .base.types import *
 
@@ -13,11 +15,16 @@ class DataLoggingReportOpenSessions(PebblePacket):
 
 
 class DataLoggingDespoolOpenSession(PebblePacket):
+    class ItemType(IntEnum):
+        ByteArray = 0x00
+        UnsignedInt = 0x02
+        SignedInt = 0x03
+
     session_id = Uint8()
     app_uuid = UUID()
     timestamp = Uint32()
     log_tag = Uint32()
-    data_item_type = Uint8()
+    data_item_type = Uint8(enum=ItemType)
     data_item_size = Uint8()
 
 

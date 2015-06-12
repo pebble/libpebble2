@@ -7,7 +7,7 @@ import threading
 import time
 from Queue import Queue
 
-from libpebble2.events import EventSourceMixin
+from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.protocol.blobdb import *
 
 __all__ = ["BlobDBClient", "SyncWrapper"]
@@ -17,7 +17,7 @@ class BlobDBClient(EventSourceMixin):
     _PendingItem = namedtuple('_PendingItem', ('token', 'data', 'callback'))
     _PendingAck = namedtuple('_PendingAck', ('timestamp', 'data', 'callback'))
 
-    def __init__(self, pebble, event_handler, timeout=5):
+    def __init__(self, pebble, timeout=5):
         self._pebble = pebble
         self._timeout = timeout
         self._pending_ack = OrderedDict()
@@ -26,7 +26,7 @@ class BlobDBClient(EventSourceMixin):
         self._running = True
         self._pebble.register_endpoint(BlobResponse, self._handle_response)
         self._start_threads()
-        EventSourceMixin.__init__(self, event_handler)
+        EventSourceMixin.__init__(self)
 
     def _start_threads(self):
         self._pending_ack_thread = threading.Thread(target=self._check_pending_acks)

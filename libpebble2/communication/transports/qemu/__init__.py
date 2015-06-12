@@ -5,6 +5,7 @@ import socket
 
 from .. import BaseTransport, MessageTarget, MessageTargetWatch
 from .protocol import QemuPacket, QemuSPP, QemuRawPacket, HEADER_SIGNATURE, FOOTER_SIGNATURE
+from libpebble2.exceptions import ConnectionError
 from libpebble2.protocol.base.types import PacketDecodeError
 
 
@@ -25,17 +26,30 @@ class QemuTransport(BaseTransport):
         self.connect_timeout = connect_timeout
         self.socket = None
         self.assembled_data = bytes()
+        self._connected = False
 
     def connect(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.connect((self.host, self.port))
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((self.host, self.port))
+        except socket.error as e:
+            raise ConnectionError(str(e))
+        self._connected = True
+
+    @property
+    def connected(self):
+        return self.socket is not None and self._connected
 
     def read_packet(self):
         while True:
-            self.assembled_data += self.socket.recv(self.BUFFER_SIZE)
+            try:
+                self.assembled_data += self.socket.recv(self.BUFFER_SIZE)
+            except socket.error:
+                self._connected = False
+                raise ConnectionError("Disconnected.")
             try:
                 packet, length = QemuPacket.parse(self.assembled_data)
-            except PacketDecodeError as e:
+            except PacketDecodeError:
                 continue
             else:
                 if packet.signature == HEADER_SIGNATURE and packet.footer == FOOTER_SIGNATURE:
@@ -53,12 +67,16 @@ class QemuTransport(BaseTransport):
                     ))
 
     def send_packet(self, message, target=MessageTargetWatch()):
-        if isinstance(target, MessageTargetWatch):
-            self.socket.send(QemuPacket(data=QemuSPP(payload=message)).serialise())
-        elif isinstance(target, QemuMessageTarget):
-            if not target.raw:
-                self.socket.send(QemuPacket(data=message).serialise())
+        try:
+            if isinstance(target, MessageTargetWatch):
+                self.socket.send(QemuPacket(data=QemuSPP(payload=message)).serialise())
+            elif isinstance(target, QemuMessageTarget):
+                if not target.raw:
+                    self.socket.send(QemuPacket(data=message).serialise())
+                else:
+                    self.socket.send(QemuRawPacket(protocol=target.protocol, data=message))
             else:
-                self.socket.send(QemuRawPacket(protocol=target.protocol, data=message))
-        else:
-            assert False
+                assert False
+        except socket.error as e:
+            self._connected = False
+            raise ConnectionError(str(e))
