@@ -52,7 +52,8 @@ def generate(module):
             else:
                 print "big endian"
             print "</strong></em>"
-            print "<p>{}</p>".format(dedent(packet.__doc__).strip().replace("\n", "<br>\n"))
+            if packet.__doc__ is not None:
+                print "<p>{}</p>".format(dedent(packet.__doc__).strip().replace("\n", "<br>\n"))
             format_properties(packet)
     print "</body></html>"
 
