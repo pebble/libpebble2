@@ -23,7 +23,7 @@ FirmwareVersion = namedtuple('FirmwareVersion', ('major', 'minor', 'patch', 'suf
 
 
 class PebbleConnection(object):
-    def __init__(self, transport):
+    def __init__(self, transport, log_protocol_level=None, log_packet_level=None):
         """
         Low-level connection to a pebble; deals in terms of PebblePackets.
         :param transport: BaseTransport
@@ -34,6 +34,8 @@ class PebbleConnection(object):
         self._register_internal_handlers()
         self._watch_info = None
         self._watch_model = None
+        self.log_protocol_level = log_packet_level
+        self.log_packet_level = log_protocol_level
 
     def connect(self):
         self.transport.connect()
@@ -64,8 +66,12 @@ class PebbleConnection(object):
 
     def handle_watch_message(self, message):
         while len(message) >= 4:
+            if self.log_protocol_level is not None:
+                logger.log(self.log_protocol_level, "<- %s", message.encode('hex'))
             self.event_handler.broadcast_event("raw_inbound", message)
             packet, length = PebblePacket.parse_message(message)
+            if self.log_packet_level is not None:
+                logger.log(self.log_packet_level, "<- %s", packet)
             message = message[length:]
             self.event_handler.broadcast_event((_EventType.Watch, type(packet)), packet)
             if length == 0:
@@ -99,11 +105,15 @@ class PebbleConnection(object):
         return self.event_handler.wait_for_event((_EventType.Transport, origin, message_type))
 
     def send_packet(self, packet):
+        if self.log_packet_level:
+            logger.log(self.log_packet_level, "-> %s", packet)
         serialised = packet.serialise_packet()
         self.event_handler.broadcast_event("raw_outbound", serialised)
-        self.transport.send_packet(serialised)
+        self.send_raw(serialised)
 
     def send_raw(self, message):
+        if self.log_protocol_level:
+            logger.log(self.log_protocol_level, "-> %s", message.encode('hex'))
         self.transport.send_packet(message)
 
     def _register_internal_handlers(self):
