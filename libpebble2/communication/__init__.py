@@ -34,8 +34,8 @@ class PebbleConnection(object):
         self._register_internal_handlers()
         self._watch_info = None
         self._watch_model = None
-        self.log_protocol_level = log_packet_level
-        self.log_packet_level = log_protocol_level
+        self.log_protocol_level = log_protocol_level
+        self.log_packet_level = log_packet_level
 
     def connect(self):
         self.transport.connect()

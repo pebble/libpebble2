@@ -14,11 +14,12 @@ class Screenshot(EventSourceMixin):
         super(Screenshot, self).__init__()
 
     def grab_image(self):
-        self._pebble.send_packet(ScreenshotRequest())
-        return self._read_screenshot()
-
-    def _read_screenshot(self):
+        # We have to open this queue before we make the request, to ensure we don't miss the response.
         queue = self._pebble.get_endpoint_queue(ScreenshotResponse)
+        self._pebble.send_packet(ScreenshotRequest())
+        return self._read_screenshot(queue)
+
+    def _read_screenshot(self, queue):
         data = queue.get().data
         header = ScreenshotHeader.parse(data)[0]
         if header.response_code != ScreenshotHeader.ResponseCode.OK:
