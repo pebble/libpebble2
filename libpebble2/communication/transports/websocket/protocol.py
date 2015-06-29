@@ -49,6 +49,13 @@ class WebSocketConnectionStatusUpdate(PebblePacket):
     status = Uint8()
 
 
+class WebSocketProxyConnectionStatusUpdate(PebblePacket):
+    class StatusCode(IntEnum):
+        Connected = 0xff
+        Disconnected = 0x00
+    status = Uint8()
+
+
 class WebSocketProxyAuthenticationRequest(PebblePacket):
     token = PascalString()
 
@@ -119,6 +126,7 @@ from_watch = {
     0x05: WebSocketInstallStatus,
     0x06: WebSocketPhoneInfoRequest,
     0x07: WebSocketConnectionStatusUpdate,
+    0x08: WebSocketProxyConnectionStatusUpdate,
     0x09: WebSocketProxyAuthenticationResponse
 }
 

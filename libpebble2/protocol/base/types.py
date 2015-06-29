@@ -168,7 +168,7 @@ class PascalString(Field):
         return buffer[offset+1:offset+1+length].split('\x00')[0], length + 1
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        value = value[:255]
+        value = value[:255].encode('utf-8')
         if self.null_terminated:
             value = value[:254] + '\x00'
         return struct.pack('B', len(value)) + value
@@ -184,7 +184,7 @@ class NullTerminatedString(Field):
         return buffer[offset:end].split('\x00')[0], end - offset + 1
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        return value + '\x00'
+        return value.encode('utf-8') + '\x00'
 
 
 class FixedString(Field):
@@ -209,6 +209,7 @@ class FixedString(Field):
             raise PacketDecodeError("{}: string not long enough (wanted {} bytes)".format(self.type, length))
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
+        value = value.encode('utf-8')
         if isinstance(self.length, Field):
             length = getattr(obj, self.length._name)
         elif self.length is not None:
