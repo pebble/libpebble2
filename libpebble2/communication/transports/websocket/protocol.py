@@ -94,7 +94,7 @@ class WebSocketRelayQemu(PebblePacket):
 
 
 class InsertPin(PebblePacket):
-    json = BinaryArray()
+    json = FixedString()
 
 
 class DeletePin(PebblePacket):
@@ -107,6 +107,14 @@ class WebSocketTimelinePin(PebblePacket):
         0x01: InsertPin,
         0x02: DeletePin
     })
+
+
+class WebSocketTimelineResponse(PebblePacket):
+    class Status(IntEnum):
+        Succeeded = 0x00
+        Failed = 0x01
+
+    status = Uint8(enum=Status)
 
 to_watch = {
     0x01: WebSocketRelayToWatch,
@@ -127,7 +135,8 @@ from_watch = {
     0x06: WebSocketPhoneInfoRequest,
     0x07: WebSocketConnectionStatusUpdate,
     0x08: WebSocketProxyConnectionStatusUpdate,
-    0x09: WebSocketProxyAuthenticationResponse
+    0x09: WebSocketProxyAuthenticationResponse,
+    0x0c: WebSocketTimelineResponse,
 }
 
 endpoints = {v: k for k, v in to_watch.iteritems()}

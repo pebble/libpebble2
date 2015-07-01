@@ -188,7 +188,7 @@ class NullTerminatedString(Field):
 
 
 class FixedString(Field):
-    def __init__(self, length, **kwargs):
+    def __init__(self, length=None, **kwargs):
         self.length = length
         super(FixedString, self).__init__(**kwargs)
 
