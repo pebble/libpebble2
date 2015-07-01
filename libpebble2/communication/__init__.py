@@ -14,6 +14,7 @@ from libpebble2.exceptions import PacketDecodeError
 from libpebble2.protocol.base import PebblePacket
 from libpebble2.protocol.system import (PhoneAppVersion, AppVersionResponse, WatchVersion, WatchVersionRequest,
                                         WatchModel, ModelRequest, Model)
+from libpebble2.util.hardware import PebbleHardware
 
 logger = logging.getLogger("libpebble2.communication")
 
@@ -63,6 +64,7 @@ class PebbleConnection(object):
         thread.daemon = True
         thread.name = "PebbleConnection"
         thread.start()
+        self.fetch_watch_info()
 
     def handle_watch_message(self, message):
         while len(message) >= 4:
@@ -133,11 +135,14 @@ class PebbleConnection(object):
         ))
         self.send_packet(packet)
 
+    def fetch_watch_info(self):
+        self.send_packet(WatchVersion(data=WatchVersionRequest()))
+        self._watch_info = self.read_from_endpoint(WatchVersion).data
+
     @property
     def watch_info(self):
         if self._watch_info is None:
-            self.send_packet(WatchVersion(data=WatchVersionRequest()))
-            self._watch_info = self.read_from_endpoint(WatchVersion).data
+            self.fetch_watch_info()
         return self._watch_info
 
     @property
@@ -163,3 +168,7 @@ class PebbleConnection(object):
             else:
                 self._watch_model = Model.Unknown
         return self._watch_model
+
+    @property
+    def watch_platform(self):
+        return PebbleHardware.hardware_platform(self.watch_info.running.hardware_platform)
