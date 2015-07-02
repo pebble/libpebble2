@@ -28,7 +28,7 @@ class SetLocaltime(PebblePacket):
 
 class SetUTC(PebblePacket):
     unix_time = Uint32()
-    utc_offset = Uint16()
+    utc_offset = Int16()
     tz_name = PascalString()
 
 

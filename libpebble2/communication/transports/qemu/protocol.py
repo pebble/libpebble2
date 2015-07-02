@@ -21,7 +21,7 @@ class QemuTap(PebblePacket):
         Z = 2
 
     axis = Uint8()
-    direction = Uint8()
+    direction = Int8()
 
 
 class QemuBluetoothConnection(PebblePacket):
