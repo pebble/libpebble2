@@ -10,7 +10,7 @@ from libpebble2.protocol.base.types import PacketDecodeError
 
 
 class QemuMessageTarget(MessageTarget):
-    def __init__(self, protocol, raw=False):
+    def __init__(self, protocol=None, raw=False):
         self.protocol = protocol
         self.raw = raw
 
