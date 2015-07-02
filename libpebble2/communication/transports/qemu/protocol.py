@@ -55,7 +55,7 @@ class QemuAccel(PebblePacket):
 
 
 class QemuVibration(PebblePacket):
-    pass
+    state = Optional(Boolean())
 
 
 class QemuButton(PebblePacket):

@@ -52,8 +52,8 @@ class QemuTransport(BaseTransport):
             except PacketDecodeError:
                 continue
             else:
+                self.assembled_data = self.assembled_data[length:]
                 if packet.signature == HEADER_SIGNATURE and packet.footer == FOOTER_SIGNATURE:
-                    self.assembled_data = self.assembled_data[length:]
                     if isinstance(packet.data, QemuSPP):
                         return MessageTargetWatch(), packet.data.payload.tostring()
                     else:
