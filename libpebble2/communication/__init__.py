@@ -10,7 +10,7 @@ import threading
 
 from .transports import BaseTransport, MessageTargetWatch
 from libpebble2.events.threaded import ThreadedEventHandler
-from libpebble2.exceptions import PacketDecodeError
+from libpebble2.exceptions import PacketDecodeError, ConnectionError
 from libpebble2.protocol.base import PebblePacket
 from libpebble2.protocol.system import (PhoneAppVersion, AppVersionResponse, WatchVersion, WatchVersionRequest,
                                         WatchModel, ModelRequest, Model)
@@ -58,6 +58,8 @@ class PebbleConnection(object):
                 self.pump_reader()
             except PacketDecodeError as e:
                 logger.warning("Packet decode failed: %s", e)
+            except ConnectionError:
+                break
 
     def run_async(self):
         thread = threading.Thread(target=self.run_sync)

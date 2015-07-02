@@ -43,7 +43,11 @@ class QemuTransport(BaseTransport):
     def read_packet(self):
         while True:
             try:
-                self.assembled_data += self.socket.recv(self.BUFFER_SIZE)
+                received = self.socket.recv(self.BUFFER_SIZE)
+                if len(received) == 0:
+                    self._connected = False
+                    raise ConnectionError("Disconnected.")
+                self.assembled_data += received
             except socket.error:
                 self._connected = False
                 raise ConnectionError("Disconnected.")
