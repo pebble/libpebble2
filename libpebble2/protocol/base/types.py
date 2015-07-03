@@ -132,6 +132,8 @@ class Union(Field):
         except KeyError:
             if not self.accept_missing:
                 raise PacketDecodeError("{}: unrecognised value for union: {}".format(self.type, k))
+            else:
+                return None, length
 
 
 class Embed(Field):
