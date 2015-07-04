@@ -3,6 +3,7 @@ __author__ = 'katharine'
 
 from six import with_metaclass, iteritems
 
+from binascii import hexlify
 import collections
 import logging
 import struct
@@ -119,8 +120,8 @@ class PebblePacket(with_metaclass(PacketType)):
     def _format_repr(self, value):
         if isinstance(value, bytes) and b'\x00' in value:
             if len(value) < 20:
-                return value.encode('hex')
+                return hexlify(value).decode()
             else:
-                return value.encode('hex')[:17] + b'...'
+                return hexlify(value[:17]).decode() + '...'
         else:
             return value

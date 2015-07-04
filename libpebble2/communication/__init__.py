@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 __author__ = 'katharine'
 
+from binascii import hexlify
 from collections import namedtuple
 from enum import Enum
 import logging
@@ -71,7 +72,7 @@ class PebbleConnection(object):
     def handle_watch_message(self, message):
         while len(message) >= 4:
             if self.log_protocol_level is not None:
-                logger.log(self.log_protocol_level, "<- %s", message.encode('hex'))
+                logger.log(self.log_protocol_level, "<- %s", hexlify(message).decode())
             self.event_handler.broadcast_event("raw_inbound", message)
             packet, length = PebblePacket.parse_message(message)
             if self.log_packet_level is not None:
@@ -117,7 +118,7 @@ class PebbleConnection(object):
 
     def send_raw(self, message):
         if self.log_protocol_level:
-            logger.log(self.log_protocol_level, "-> %s", message.encode('hex'))
+            logger.log(self.log_protocol_level, "-> %s", hexlify(message).decode())
         self.transport.send_packet(message)
 
     def _register_internal_handlers(self):
