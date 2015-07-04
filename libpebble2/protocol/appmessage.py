@@ -73,7 +73,7 @@ class StockAppSetIcon(PebblePacket):
 
     class App(IntEnum):
         Sports = 0x80
-        Gold = 0x81
+        Golf = 0x81
 
     app = Uint8(enum=App)
     row_size = Uint16()
