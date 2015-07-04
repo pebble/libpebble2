@@ -9,7 +9,7 @@ from libpebble2.exceptions import ConnectionError
 from libpebble2.protocol.base.types import PacketDecodeError
 
 
-class QemuMessageTarget(MessageTarget):
+class MessageTargetQemu(MessageTarget):
     def __init__(self, protocol=None, raw=False):
         self.protocol = protocol
         self.raw = raw
@@ -61,7 +61,7 @@ class QemuTransport(BaseTransport):
                     if isinstance(packet.data, QemuSPP):
                         return MessageTargetWatch(), packet.data.payload
                     else:
-                        return QemuMessageTarget(packet.protocol), packet.data
+                        return MessageTargetQemu(packet.protocol), packet.data
                 else:
                     raise PacketDecodeError("QemuTransport: signature mismatch ({:x} = {:x}, {:x} = {:x})".format(
                         packet.signature,
@@ -74,7 +74,7 @@ class QemuTransport(BaseTransport):
         try:
             if isinstance(target, MessageTargetWatch):
                 self.socket.send(QemuPacket(data=QemuSPP(payload=message)).serialise())
-            elif isinstance(target, QemuMessageTarget):
+            elif isinstance(target, MessageTargetQemu):
                 if not target.raw:
                     self.socket.send(QemuPacket(data=message).serialise())
                 else:
