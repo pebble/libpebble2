@@ -3,7 +3,6 @@ __author__ = 'katharine'
 
 from six import iteritems
 
-from array import array
 import struct
 
 from libpebble2.events.mixin import EventSourceMixin
@@ -40,9 +39,9 @@ class AppMessageService(EventSourceMixin):
                 if t.type == AppMessageTuple.Type.ByteArray:
                     result[t.key] = t.data
                 elif t.type == AppMessageTuple.Type.CString:
-                    result[t.key] = t.data.tostring().split('\x00')[0]
+                    result[t.key] = t.data.split('\x00')[0]
                 else:
-                    result[t.key] = struct.unpack(self._type_mapping[(t.type, t.length)], t.data.tostring())
+                    result[t.key] = struct.unpack(self._type_mapping[(t.type, t.length)], t.data)
             self._broadcast_event("appmessage", packet.transaction_id, message.uuid, result)
             self._pebble.send_packet(AppMessage(transaction_id=packet.transaction_id, message=AppMessageACK()))
         else:
@@ -63,9 +62,9 @@ class AppMessageService(EventSourceMixin):
         for k, v in iteritems(dictionary):
             if isinstance(v, AppMessageNumber):
                 tuples.append(AppMessageTuple(key=k, type=v.type,
-                                data=array('B', struct.pack(self._type_mapping[v.type, v.length], v.value))))
+                                data=struct.pack(self._type_mapping[v.type, v.length], v.value)))
             elif v.type == AppMessageTuple.Type.CString:
-                tuples.append(AppMessageTuple(key=k, type=v.type, data=array('B', v.value + b'\x00')))
+                tuples.append(AppMessageTuple(key=k, type=v.type, data=v.value.encode('utf-8') + b'\x00'))
             elif v.type == AppMessageTuple.Type.ByteArray:
                 tuples.append(AppMessageTuple(key=k, type=v.type, data=v.value))
         message.data = AppMessagePush(uuid=target_app, dictionary=tuples)

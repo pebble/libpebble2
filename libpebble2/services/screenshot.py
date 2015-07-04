@@ -3,8 +3,6 @@ __author__ = 'katharine'
 
 from six.moves import range
 
-from array import array
-
 from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.exceptions import ScreenshotError
 from libpebble2.protocol.screenshots import *
@@ -60,7 +58,7 @@ class Screenshot(EventSourceMixin):
             for column in range(header.width):
                 pixel = (data[row*row_bytes + column//8] >> (column % 8)) & 1
                 row_values.extend([pixel * 255] * 3)
-            output.append(array('B', row_values))
+            output.append(bytearray(row_values))
         return output
 
     @classmethod
@@ -75,5 +73,5 @@ class Screenshot(EventSourceMixin):
                     ((pixel >> 2) & 0b11) * 85,
                     ((pixel >> 0) & 0b11) * 85,
                 ])
-            output.append(array('B', row_values))
+            output.append(bytearray(row_values))
         return output

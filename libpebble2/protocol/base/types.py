@@ -3,7 +3,6 @@ __author__ = "katharine"
 
 from six import iteritems
 
-import array
 import struct
 import uuid
 
@@ -319,19 +318,19 @@ class BinaryArray(Field):
             setattr(obj, self.length._name, len(value))
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        if not isinstance(value, array.array):
-            value = array.array('B', value)
-        return value.tostring()
+        if not isinstance(value, bytes):
+            raise TypeError("BinaryArrays must receive 'bytes'; got '{}'".format(value))
+        return value
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         if isinstance(self.length, Field):
             length = getattr(obj, self.length._name)
-            return array.array('B', buffer[offset:offset+length]), length
+            return buffer[offset:offset+length], length
         elif self.length is None:
             length = len(buffer) - offset
-            return array.array('B', buffer[offset:]), length
+            return buffer[offset:], length
         else:
-            return array.array('B', buffer[offset:offset+self.length]), self.length
+            return buffer[offset:offset+self.length], self.length
 
 
 class Optional(Field):

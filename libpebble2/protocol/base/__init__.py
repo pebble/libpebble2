@@ -118,7 +118,7 @@ class PebblePacket(with_metaclass(PacketType)):
                            ', '.join('%s=%s' % (k, self._format_repr(getattr(self, k))) for k in self._type_mapping.keys()))
 
     def _format_repr(self, value):
-        if isinstance(value, bytes) and b'\x00' in value:
+        if isinstance(value, bytes):
             if len(value) < 20:
                 return hexlify(value).decode()
             else:

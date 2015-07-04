@@ -11,7 +11,7 @@ def process_word(data, crc=0xffffffff):
     if len(data) < 4:
         d_array = array.array('B', data)
         for x in range(0, 4 - len(data)):
-            d_array.insert(0,0)
+            d_array.insert(0, 0)
         d_array.reverse()
         data = d_array.tostring()
 

@@ -59,7 +59,7 @@ class QemuTransport(BaseTransport):
                 self.assembled_data = self.assembled_data[length:]
                 if packet.signature == HEADER_SIGNATURE and packet.footer == FOOTER_SIGNATURE:
                     if isinstance(packet.data, QemuSPP):
-                        return MessageTargetWatch(), packet.data.payload.tostring()
+                        return MessageTargetWatch(), packet.data.payload
                     else:
                         return QemuMessageTarget(packet.protocol), packet.data
                 else:
