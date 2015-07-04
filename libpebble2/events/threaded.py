@@ -3,7 +3,7 @@ from __future__ import absolute_import
 __author__ = 'katharine'
 
 import threading
-import Queue
+from six.moves import queue
 
 from . import BaseEventHandler, BaseEventQueue
 from libpebble2.exceptions import TimeoutError
@@ -37,8 +37,7 @@ class ThreadedEventHandler(BaseEventHandler):
         return _QueuedEventWait(self, event)
 
     def broadcast_event(self, event, *args):
-        # TODO: This could maybe deadlock?
-        for handler in self._handlers.get(event, {}).values():
+        for handler in list(self._handlers.get(event, {}).values()):
             handler(*args)
 
 
@@ -62,7 +61,7 @@ class _BlockingEventWait(object):
 
 class _QueuedEventWait(BaseEventQueue):
     def __init__(self, events, event):
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
         self.event_handler = events
         self.handle = self.event_handler.register_handler(event, self._handle_event)
 
@@ -75,7 +74,7 @@ class _QueuedEventWait(BaseEventQueue):
     def get(self, timeout=10):
         try:
             return self.queue.get(timeout=timeout)
-        except Queue.Empty:
+        except queue.Empty:
             raise TimeoutError()
 
     def __iter__(self):

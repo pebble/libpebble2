@@ -1,6 +1,8 @@
 from __future__ import print_function, absolute_import
 __author__ = 'katharine'
 
+from six import with_metaclass, iteritems
+
 import collections
 import logging
 import struct
@@ -32,7 +34,7 @@ class PacketType(type):
         for base in bases:
             if hasattr(base, '_type_mapping'):
                 dct['_type_mapping'].update(getattr(base, '_type_mapping'))
-        for k, v in dct.items():
+        for k, v in iteritems(dct):
             if not isinstance(v, Field):
                 continue
             v._name = k
@@ -51,16 +53,14 @@ class PacketType(type):
                 _PacketRegistry[cls._Meta['endpoint']] = cls
         # Fill in all of the fields with a reference to this class.
         # TODO: This isn't used any more; remove it?
-        for k, v in cls._type_mapping.iteritems():
+        for k, v in iteritems(cls._type_mapping):
             v._parent = cls
         super(PacketType, cls).__init__(name, bases, dct)
 
 
-class PebblePacket(object):
-    __metaclass__ = PacketType
-
+class PebblePacket(with_metaclass(PacketType)):
     def __init__(self, **kwargs):
-        for k, v in kwargs.iteritems():
+        for k, v in iteritems(kwargs):
             if k.startswith('_'):
                 raise AttributeError("You cannot set internal properties during construction.")
             getattr(self, k)  # Throws an exception if the property doesn't exist.
@@ -73,11 +73,11 @@ class PebblePacket(object):
             endianness = self._Meta.get('endianness', endianness)
 
         # Some fields want to manipulate other fields that appear before them (e.g. Unions)
-        for k, v in self._type_mapping.iteritems():
+        for k, v in iteritems(self._type_mapping):
             v.prepare(self, getattr(self, k))
 
-        message = ''
-        for k, v in self._type_mapping.iteritems():
+        message = b''
+        for k, v in iteritems(self._type_mapping):
             message += v.value_to_bytes(self, getattr(self, k), default_endianness=endianness)
         return message
 
@@ -102,7 +102,7 @@ class PebblePacket(object):
         offset = 0
         if hasattr(cls, '_Meta'):
             default_endianness = cls._Meta.get('endianness', default_endianness)
-        for k, v in cls._type_mapping.iteritems():
+        for k, v in iteritems(cls._type_mapping):
             try:
                 value, length = v.buffer_to_value(obj, message, offset, default_endianness=default_endianness)
             except Exception:
@@ -117,10 +117,10 @@ class PebblePacket(object):
                            ', '.join('%s=%s' % (k, self._format_repr(getattr(self, k))) for k in self._type_mapping.keys()))
 
     def _format_repr(self, value):
-        if isinstance(value, basestring) and '\x00' in value:
+        if isinstance(value, bytes) and b'\x00' in value:
             if len(value) < 20:
                 return value.encode('hex')
             else:
-                return value.encode('hex')[:17] + '...'
+                return value.encode('hex')[:17] + b'...'
         else:
             return value

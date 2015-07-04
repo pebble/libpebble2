@@ -5,7 +5,7 @@ from collections import namedtuple, OrderedDict
 import random
 import threading
 import time
-from Queue import Queue
+from six.renames.queue import Queue
 
 from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.protocol.blobdb import *
@@ -63,7 +63,7 @@ class BlobDBClient(EventSourceMixin):
             with self._lock:
                 # check pending acks
                 now = time.time()
-                for token, pending in self._pending_ack.items():
+                for token, pending in list(self._pending_ack.items()):
                     if now - pending.timestamp > self._timeout:
                         del self._pending_ack[token]
                         self._enqueue(self._PendingItem(token, pending.data, pending.callback))

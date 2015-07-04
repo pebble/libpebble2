@@ -1,5 +1,7 @@
 __author__ = 'katharine'
 
+from six import with_metaclass
+
 from abc import ABCMeta, abstractmethod, abstractproperty
 
 
@@ -11,9 +13,7 @@ class MessageTargetWatch(object):
     pass
 
 
-class BaseTransport(object):
-    __metaclass__ = ABCMeta
-
+class BaseTransport(with_metaclass(ABCMeta)):
     TARGET_WATCH = 'watch'
 
     @abstractproperty

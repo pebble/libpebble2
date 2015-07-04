@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 __author__ = 'katharine'
 
+from six import iteritems
+
 from array import array
 import struct
 
@@ -58,12 +60,12 @@ class AppMessageService(EventSourceMixin):
         tid = self._get_txid()
         message = self._message_type(transaction_id=tid)
         tuples = []
-        for k, v in dictionary.iteritems():
+        for k, v in iteritems(dictionary):
             if isinstance(v, AppMessageNumber):
                 tuples.append(AppMessageTuple(key=k, type=v.type,
                                 data=array('B', struct.pack(self._type_mapping[v.type, v.length], v.value))))
             elif v.type == AppMessageTuple.Type.CString:
-                tuples.append(AppMessageTuple(key=k, type=v.type, data=array('B', v.value + '\x00')))
+                tuples.append(AppMessageTuple(key=k, type=v.type, data=array('B', v.value + b'\x00')))
             elif v.type == AppMessageTuple.Type.ByteArray:
                 tuples.append(AppMessageTuple(key=k, type=v.type, data=v.value))
         message.data = AppMessagePush(uuid=target_app, dictionary=tuples)

@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division
 __author__ = 'katharine'
 
+from six.moves import range
+
 from array import array
 
 from libpebble2.events.mixin import EventSourceMixin
@@ -53,9 +55,9 @@ class Screenshot(EventSourceMixin):
     def _decode_1bit(cls, header, data):
         output = []
         row_bytes = header.width // 8
-        for row in xrange(header.height):
+        for row in range(header.height):
             row_values = []
-            for column in xrange(header.width):
+            for column in range(header.width):
                 pixel = (data[row*row_bytes + column//8] >> (column % 8)) & 1
                 row_values.extend([pixel * 255] * 3)
             output.append(array('B', row_values))
@@ -64,9 +66,9 @@ class Screenshot(EventSourceMixin):
     @classmethod
     def _decode_8bit(cls, header, data):
         output = []
-        for row in xrange(header.height):
+        for row in range(header.height):
             row_values = []
-            for column in xrange(header.width):
+            for column in range(header.width):
                 pixel = data[row*header.width + column]
                 row_values.extend([
                     ((pixel >> 4) & 0b11) * 85,

@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 __author__ = 'katharine'
 
+from six import with_metaclass
+
 from abc import ABCMeta, abstractmethod
 
 
-class BaseEventHandler(object):
-    __metaclass__ = ABCMeta
-
+class BaseEventHandler(with_metaclass(ABCMeta)):
     @abstractmethod
     def register_handler(self, event, handler):
         pass
@@ -28,9 +28,7 @@ class BaseEventHandler(object):
         pass
 
 
-class BaseEventQueue(object):
-    __metaclass__ = ABCMeta
-
+class BaseEventQueue(with_metaclass(ABCMeta)):
     @abstractmethod
     def close(self):
         pass

@@ -25,7 +25,7 @@ class QemuTransport(BaseTransport):
         self.timeout = timeout
         self.connect_timeout = connect_timeout
         self.socket = None
-        self.assembled_data = bytes()
+        self.assembled_data = b''
         self._connected = False
 
     def connect(self):

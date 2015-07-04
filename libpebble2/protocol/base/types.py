@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 __author__ = "katharine"
 
+from six import iteritems
+
 import array
 import struct
 import uuid
@@ -99,7 +101,7 @@ class Union(Field):
     def __init__(self, determinant, contents, accept_missing=False, length=None):
         self.determinant = determinant
         self.contents = contents
-        self.type_map = {v: k for k, v in self.contents.iteritems()}
+        self.type_map = {v: k for k, v in iteritems(self.contents)}
         self.accept_missing = accept_missing
         self.length = length
         super(Union, self).__init__()
@@ -108,7 +110,7 @@ class Union(Field):
         if value is not None:
             return value.serialise(default_endianness=default_endianness)
         elif self.accept_missing:
-            return ''
+            return b''
         else:
             raise Exception("???")
 
@@ -157,7 +159,7 @@ class Padding(Field):
         return None, self.length
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        return '\x00' * self.length
+        return b'\x00' * self.length
 
 
 class PascalString(Field):
@@ -167,7 +169,7 @@ class PascalString(Field):
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         length, = struct.unpack_from('B', buffer, offset)
-        return buffer[offset+1:offset+1+length].split('\x00')[0], length + 1
+        return buffer[offset+1:offset+1+length].split(b'\x00')[0].decode('utf-8'), length + 1
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
         value = value[:255].encode('utf-8')
@@ -183,10 +185,10 @@ class NullTerminatedString(Field):
             end += 1
             if end >= len(buffer):
                 raise PacketDecodeError("{}: Reached end of buffer without terminating.".format(self.type))
-        return buffer[offset:end].split('\x00')[0], end - offset + 1
+        return buffer[offset:end].split(b'\x00')[0].decode('utf-8'), end - offset + 1
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        return value.encode('utf-8') + '\x00'
+        return value.encode('utf-8') + b'\x00'
 
 
 class FixedString(Field):
@@ -206,7 +208,7 @@ class FixedString(Field):
         else:
             length = len(buffer) - offset
         try:
-            return struct.unpack_from('%ds' % length, buffer, offset)[0].split('\x00')[0], length
+            return struct.unpack_from('%ds' % length, buffer, offset)[0].split(b'\x00')[0].decode('utf-8'), length
         except struct.error:
             raise PacketDecodeError("{}: string not long enough (wanted {} bytes)".format(self.type, length))
 
@@ -232,7 +234,7 @@ class PascalList(Field):
             setattr(obj, self.count._name, len(value))
 
     def value_to_bytes(self, obj, values, default_endianness=DEFAULT_ENDIANNESS):
-        result = ''
+        result = b''
         for value in values:
             serialised = value.serialise(default_endianness=default_endianness)
             result += struct.pack('B', len(serialised)) + serialised
@@ -277,7 +279,7 @@ class FixedList(Field):
 
 
     def value_to_bytes(self, obj, values, default_endianness=DEFAULT_ENDIANNESS):
-        result = ''
+        result = b''
         for value in values:
             if isinstance(self.member_type, Field):
                 result += self.member_type.value_to_bytes(obj, value, default_endianness=default_endianness)
