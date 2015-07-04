@@ -1,3 +1,5 @@
+from __future__ import division
+
 from six.moves import range
 
 import array
@@ -27,7 +29,7 @@ def process_word(data, crc=0xffffffff):
 
 
 def process_buffer(buf, c=0xffffffff):
-    word_count = len(buf) / 4
+    word_count = len(buf) // 4
     if len(buf) % 4 != 0:
         word_count += 1
 

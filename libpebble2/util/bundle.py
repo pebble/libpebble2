@@ -79,7 +79,7 @@ class PebbleBundle(object):
         if self.get_real_path(self.MANIFEST_FILENAME) not in self.zip.namelist():
             raise Exception("Could not find {}; are you sure this is a PebbleBundle?".format(self.MANIFEST_FILENAME))
 
-        self.manifest = json.loads(self.zip.read(self.get_real_path(self.MANIFEST_FILENAME)))
+        self.manifest = json.loads(self.zip.read(self.get_real_path(self.MANIFEST_FILENAME)).decode('utf-8'))
         return self.manifest
 
     def get_app_metadata(self):
@@ -103,8 +103,8 @@ class PebbleBundle(object):
             'app_size': values[7],
             'offset': values[8],
             'crc': values[9],
-            'app_name': values[10].rstrip('\0'),
-            'company_name': values[11].rstrip('\0'),
+            'app_name': values[10].rstrip(b'\0').decode('utf-8'),
+            'company_name': values[11].rstrip(b'\0').decode('utf-8'),
             'icon_resource_id': values[12],
             'symbol_table_addr': values[13],
             'flags': values[14],
