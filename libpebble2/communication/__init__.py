@@ -22,6 +22,9 @@ logger = logging.getLogger("libpebble2.communication")
 _EventType = Enum('_EventType', ('Watch', 'Transport'))
 
 FirmwareVersion = namedtuple('FirmwareVersion', ('major', 'minor', 'patch', 'suffix'))
+"""
+Represents a firmware version, in the format ``major.minor.patch-suffix``.
+"""
 
 
 class PebbleConnection(object):

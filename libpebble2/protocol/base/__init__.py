@@ -17,6 +17,13 @@ logger = logging.getLogger("libpebble2.protocol")
 _PacketRegistry = {}
 
 
+def make_output(thing):
+    class C(object):
+        def __repr__(self):
+            return thing
+    return C()
+
+
 class PacketType(type):
     """
     Metaclass for :class:`PebblePacket` that transforms properties that are subclasses of :class:`Field` into a

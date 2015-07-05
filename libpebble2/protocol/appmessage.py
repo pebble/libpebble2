@@ -11,6 +11,9 @@ __all__ = ["AppMessageTuple", "AppMessagePush", "AppMessageACK", "AppMessageNACK
 
 
 class AppMessageTuple(PebblePacket):
+    """
+    Represents a tuple in an AppMessage dictionary.
+    """
     class Type(IntEnum):
         ByteArray = 0
         CString = 1
