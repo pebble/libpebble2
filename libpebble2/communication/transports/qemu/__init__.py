@@ -10,20 +10,37 @@ from libpebble2.protocol.base.types import PacketDecodeError
 
 
 class MessageTargetQemu(MessageTarget):
+    """
+    Indicates that a message is directed at QEMU, rather than the firmware running on it. If ``raw`` is ``True``,
+    the message should be a binary message (without framing), with QEMU protocol indicated by ``protocol``.
+    Otherwise, the message should be a :class:`.PebblePacket` from :mod:`.protocol`.
+
+    :param protocol: The protocol to send to, if sending a ``raw`` message
+    :type protocol: :any:`int`
+    :param raw: If ``True``, the message is pre-serialised and will be sent as-is after adding framing.
+    :type raw: :any:`bool`
+    """
     def __init__(self, protocol=None, raw=False):
         self.protocol = protocol
         self.raw = raw
 
 
 class QemuTransport(BaseTransport):
+    """
+    Represents a connection to a `Pebble QEMU <https://github.com/pebble/qemu>`_ instance.
+
+    :param host: The host on which the QEMU instance is running.
+    :type host: str
+    :param port: The port on which the QEMU instance has exposed its Pebble QEMU Protocol port.
+    :type port: int
+    """
+    #: Number of bytes read from the socket at a time.
     BUFFER_SIZE = 2048
     must_initialise = True
 
-    def __init__(self, host='127.0.0.1', port=12344, timeout=1, connect_timeout=5):
+    def __init__(self, host='127.0.0.1', port=12344):
         self.host = host
         self.port = port
-        self.timeout = timeout
-        self.connect_timeout = connect_timeout
         self.socket = None
         self.assembled_data = b''
         self._connected = False

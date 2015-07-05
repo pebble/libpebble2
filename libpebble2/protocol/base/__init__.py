@@ -18,6 +18,10 @@ _PacketRegistry = {}
 
 
 class PacketType(type):
+    """
+    Metaclass for :class:`PebblePacket` that transforms properties that are subclasses of :class:`Field` into a
+    Pebble Protocol parser.
+    """
     def __new__(mcs, name, bases, dct):
         mapping = []
         # If we have a _Meta property, delete it.
@@ -58,8 +62,38 @@ class PacketType(type):
             v._parent = cls
         super(PacketType, cls).__init__(name, bases, dct)
 
+    def __repr__(self):
+        return self.__name__
+
 
 class PebblePacket(with_metaclass(PacketType)):
+    """
+    Represents some sort of Pebble Protocol message.
+
+    A PebblePacket can have an inner class named ``Meta`` containing some information about the property:
+
+    ==================  ===============================================================================================
+    **endpoint**        The Pebble Protocol endpoint that is represented by this message.
+    **endianness**      The endianness of the packet. The default endianness is big-endian, but it can be overridden by
+                        packets and fields, with the priority:
+    **register**        If set to ``False``, the packet will not be registered and thus will be ignored by
+                        :meth:`parse_message`. This is useful when messages are ambiguous, and distinguished only by
+                        whether they are sent to or from the Pebble.
+    ==================  ===============================================================================================
+
+    A sample packet might look like this: ::
+
+       class AppFetchResponse(PebblePacket):
+           class Meta:
+               endpoint = 0x1771
+               endianness = '<'
+               register = False
+
+           command = Uint8(default=0x01)
+           response = Uint8(enum=AppFetchStatus)
+
+    :param \*\*kwargs: Initial values for any properties on the object.
+    """
     def __init__(self, **kwargs):
         for k, v in iteritems(kwargs):
             if k.startswith('_'):
@@ -68,6 +102,16 @@ class PebblePacket(with_metaclass(PacketType)):
             setattr(self, k, v)
 
     def serialise(self, default_endianness=None):
+        """
+        Serialise a message, without including any framing.
+
+        :param default_endianness: The default endianness, unless overridden by the fields or class metadata.
+                                   Should usually be left at ``None``. Otherwise, use ``'<'`` for little endian and
+                                   ``'>'`` for big endian.
+        :type default_endianness: str
+        :return: The serialised message.
+        :rtype: bytes
+        """
         # Figure out an endianness.
         endianness = (default_endianness or DEFAULT_ENDIANNESS)
         if hasattr(self, '_Meta'):
@@ -83,6 +127,12 @@ class PebblePacket(with_metaclass(PacketType)):
         return message
 
     def serialise_packet(self):
+        """
+        Serialise a message, including framing information inferred from the ``Meta`` inner class of the packet.
+        ``self.Meta.endpoint`` must be defined to call this method.
+
+        :return: A serialised message, ready to be sent to the Pebble.
+        """
         if not hasattr(self, '_Meta'):
             raise ReferenceError("Can't serialise a packet that doesn't have an endpoint ID.")
         serialised = self.serialise()
@@ -90,6 +140,18 @@ class PebblePacket(with_metaclass(PacketType)):
 
     @classmethod
     def parse_message(cls, message):
+        """
+        Parses a message received from the Pebble. Uses Pebble Protocol framing to figure out what sort of packet
+        it is. If the packet is registered (has been defined and imported), returns the deserialised packet, which will
+        not necessarily be the same class as this. Otherwise returns ``None``.
+
+        Also returns the length of the message consumed during deserialisation.
+
+        :param message: A serialised message received from the Pebble.
+        :type message: bytes
+        :return: ``(decoded_message, decoded length)``
+        :rtype: (:class:`PebblePacket`, :any:`int`)
+        """
         length = struct.unpack_from('!H', message, 0)[0] + 4
         command, = struct.unpack_from('!H', message, 2)
         if command in _PacketRegistry:
@@ -99,6 +161,19 @@ class PebblePacket(with_metaclass(PacketType)):
 
     @classmethod
     def parse(cls, message, default_endianness=DEFAULT_ENDIANNESS):
+        """
+        Parses a message without any framing, returning the decoded result and length of message consumed. The result
+        will always be of the same class as :meth:`parse` was called on. If the message is invalid,
+        :exc:`.PacketDecodeError` will be raised.
+
+        :param message: The message to decode.
+        :type message: bytes
+        :param default_endianness: The default endianness, unless overridden by the fields or class metadata.
+                                   Should usually be left at ``None``. Otherwise, use ``'<'`` for little endian and
+                                   ``'>'`` for big endian.
+        :return: ``(decoded_message, decoded length)``
+        :rtype: (:class:`PebblePacket`, :any:`int`)
+        """
         obj = cls()
         offset = 0
         if hasattr(cls, '_Meta'):

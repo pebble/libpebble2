@@ -10,10 +10,20 @@ from .protocol import WebSocketRelayToWatch, WebSocketRelayFromWatch, endpoints,
 
 
 class MessageTargetPhone(MessageTarget):
+    """
+    Indicates that the message is directed at a connected phone running the Pebble mobile app. For this purpose,
+    `pypkjs <https://github.com/pebble/pypkjs>`_ counts as a phone.
+    """
     pass
 
 
 class WebsocketTransport(BaseTransport):
+    """
+    Represents a connection via WebSocket to a phone running the Pebble mobile app, which is in turn connected
+    to a Pebble over Bluetooth.
+
+    :param url: The WebSocket URL to connect to, in standard format (e.g. ``ws://localhost:9000/``)
+    """
     must_initialise = False
 
     def __init__(self, url):

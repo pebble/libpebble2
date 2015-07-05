@@ -10,6 +10,9 @@ from libpebble2.exceptions import TimeoutError
 
 
 class ThreadedEventHandler(BaseEventHandler):
+    """
+    A threaded implementation of :class:`.BaseEventHandler`.
+    """
     def __init__(self):
         self._handlers = {}
         self._handle_map = {}
