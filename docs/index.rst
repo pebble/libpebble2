@@ -1,7 +1,13 @@
-
-
+========================
 libpebble2 documentation
 ========================
+
+.. toctree::
+   :hidden:
+
+   connection
+   transports
+   protocol
 
 libpebble2 is a python library for interacting with Pebble devices. It:
 
@@ -14,15 +20,15 @@ libpebble2 is a python library for interacting with Pebble devices. It:
 * Works on Python 2.7 and 3.4
 
 Getting Started
----------------
+===============
 
 Installation
-~~~~~~~~~~~~
+------------
 
 ``pip install libpebble2``, or grab the source from https://github.com/pebble/libpebble2
 
 Usage
-~~~~~
+-----
 
 Connecting: ::
 
@@ -47,12 +53,12 @@ Installing an app: ::
    >>> AppInstaller(pebble, "some_app.pbw").install()
 
 Components
-----------
+==========
 
 libpebble2 is split into a number of components.
 
 Communication and transports
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 libpebble2 provides a :class:`.PebbleConnection` to connect to a Pebble. This class manages all Pebble Protocol
 communication, but does not itself know how to establish a connection to one. Connecting to a Pebble is handled by
@@ -60,7 +66,7 @@ the transports, :class:`.QemuTransport` and :class:`.WebsocketTransport`. It is 
 necessary.
 
 Protocol
-~~~~~~~~
+--------
 
 The protocol layer provides serialisation and deserialisation of Pebble Protocol messages (and, in fact, any arbitrary
 packed structure). It provides a simple DSL for defining messages: ::
@@ -76,7 +82,7 @@ packed structure). It provides a simple DSL for defining messages: ::
 Most messages are defined by the library in the :mod:`.protocol` package, but defining more is easy.
 
 Services
-~~~~~~~~
+--------
 
 Some watch services are more complex than one or two messages. For these, services are provided to reduce effort. ::
 

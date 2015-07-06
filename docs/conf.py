@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.dirname(__file__) + '/../')
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
 ]
 
@@ -290,9 +291,3 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3.4', None)}
-
-def d(app, what, name, obj, options, lines):
-    print name
-
-def setup(app):
-    app.connect('autodoc-process-docstring', d)

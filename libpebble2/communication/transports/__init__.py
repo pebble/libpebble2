@@ -55,6 +55,7 @@ class BaseTransport(with_metaclass(ABCMeta)):
         """
         Send a message. This message could be to the Pebble (in which case it must be a :class:`PebblePacket`), or
         to the transport (in which case the message type is transport-defined).
+
         :param message: Message to send.
         :type message: PebblePacket
         :param target: Target for the message

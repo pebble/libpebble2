@@ -6,7 +6,6 @@ Subpackages
 
 .. toctree::
 
-    libpebble2.communication
     libpebble2.events
     libpebble2.protocol
     libpebble2.services

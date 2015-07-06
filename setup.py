@@ -2,8 +2,12 @@ __author__ = 'katharine'
 
 from setuptools import setup, find_packages
 
+__version__= None  # Overwritten by executing version.py.
+with open('libpebble2/version.py') as f:
+    exec(f.read())
+
 setup(name='libpebble2',
-      version='0.0.1',
+      version=__version__,
       description='Library for communicating with pebbles over pebble protocol',
       url='https://github.com/pebble/libpebble2',
       author='Pebble Technology Corporation',
