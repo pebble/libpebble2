@@ -4,7 +4,7 @@ __author__ = 'katharine'
 from libpebble2.protocol.blobdb import BlobDatabaseID
 from libpebble2.protocol.legacy2 import *
 from libpebble2.protocol.timeline import *
-from libpebble2.services.blobdb import BlobDBClient
+from libpebble2.services.blobdb import BlobDBClient, SyncWrapper
 
 import struct
 import time
@@ -15,7 +15,7 @@ NotificationSource = LegacyNotification.Source
 
 
 class Notifications(object):
-    def __init__(self, pebble, blobdb):
+    def __init__(self, pebble, blobdb=None):
         self._pebble = pebble
         self._blobdb = blobdb or BlobDBClient(pebble)
 
@@ -62,4 +62,4 @@ class Notifications(object):
                                     attributes=[
                                         TimelineAttribute(attribute_id=0x01, content=b"Dismiss")])]
         )
-        self._blobdb.insert(BlobDatabaseID.Notification, item_id, notification.serialise())
+        SyncWrapper(self._blobdb.insert, BlobDatabaseID.Notification, item_id, notification.serialise()).wait()

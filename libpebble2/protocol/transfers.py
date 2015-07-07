@@ -119,7 +119,7 @@ class GetBytesDataResponse(PebblePacket):
 
 
 class GetBytesFileRequest(PebblePacket):
-    filename = PascalString(null_terminated=True)
+    filename = PascalString(null_terminated=True, count_null_terminator=False)
 
 
 class GetBytes(PebblePacket):
