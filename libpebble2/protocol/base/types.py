@@ -162,8 +162,9 @@ class Padding(Field):
 
 
 class PascalString(Field):
-    def __init__(self, null_terminated=False, *args, **kwargs):
+    def __init__(self, null_terminated=False, count_null_terminator=True, *args, **kwargs):
         self.null_terminated = null_terminated
+        self.count_null_terminator = count_null_terminator
         super(PascalString, self).__init__(*args, **kwargs)
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
@@ -174,7 +175,12 @@ class PascalString(Field):
         value = value[:255].encode('utf-8')
         if self.null_terminated:
             value = value[:254] + '\x00'
-        return struct.pack('B', len(value)) + value
+            length = len(value)
+            if not self.count_null_terminator:
+                length -= 1
+        else:
+            length = len(value)
+        return struct.pack('B', length) + value
 
 
 class NullTerminatedString(Field):
