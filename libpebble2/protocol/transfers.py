@@ -7,7 +7,8 @@ from .base import PebblePacket
 from .base.types import *
 
 __all__ = ["ObjectType", "PutBytesInstall", "PutBytesInit", "PutBytesAppInit", "PutBytesPut", "PutBytesCommit",
-           "PutBytesAbort", "PutBytes", "PutBytesApp", "PutBytesResponse"]
+           "PutBytesAbort", "PutBytes", "PutBytesApp", "PutBytesResponse", "GetBytes", "GetBytesCoredumpRequest",
+           "GetBytesDataResponse", "GetBytesFileRequest", "GetBytesInfoResponse"]
 
 
 class ObjectType(IntEnum):
@@ -94,3 +95,42 @@ class PutBytesResponse(PebblePacket):
 
     result = Uint8(enum=Result)
     cookie = Uint32()
+
+
+class GetBytesCoredumpRequest(PebblePacket):
+    pass
+
+
+class GetBytesInfoResponse(PebblePacket):
+    class ErrorCode(IntEnum):
+        Success = 0x0
+        MalformedRequest = 0x1
+        InProgress = 0x2
+        DoesNotExist = 0x3
+        Corrupted = 0x4
+
+    error_code = Uint8()
+    num_bytes = Uint32()
+
+
+class GetBytesDataResponse(PebblePacket):
+    offset = Uint32()
+    data = BinaryArray()
+
+
+class GetBytesFileRequest(PebblePacket):
+    filename = PascalString(null_terminated=True)
+
+
+class GetBytes(PebblePacket):
+    class Meta:
+        endpoint = 9000
+
+    command = Uint8()
+    transaction_id = Uint8()
+    message = Union(command, {
+        0x00: GetBytesCoredumpRequest,
+        0x01: GetBytesInfoResponse,
+        0x02: GetBytesDataResponse,
+        0x03: GetBytesFileRequest
+    })
