@@ -279,9 +279,10 @@ class PascalString(Field):
     :param null_terminated: If ``True``, a zero byte is appended to the string and included in the length during
                             serialisation. The string is always terminated at the first zero byte during
                             deserialisation, regardless of the value of this argument.
+    :type null_terminated: bool
     :param count_null_terminator: If ``True``, any appended zero byte is not counted in the length of the string.
                             This actually comes up.
-    :type null_terminated: bool
+    :type count_null_terminator: bool
     """
     def __init__(self, null_terminated=False, count_null_terminator=True, *args, **kwargs):
         self.null_terminated = null_terminated
