@@ -199,6 +199,22 @@ class PebblePacket(with_metaclass(PacketType)):
         return "%s(%s)" % (type(self).__name__,
                            ', '.join('%s=%s' % (k, self._format_repr(getattr(self, k))) for k in self._type_mapping.keys()))
 
+    def __eq__(self, other):
+        if not isinstance(other, PebblePacket):
+            return NotImplemented
+
+        if type(self) != type(other):
+            return False
+
+        for k in self._type_mapping:
+            if getattr(self, k) != getattr(other, k):
+                return False
+
+        return True
+
+    def __ne__(self, other):
+        return not (self == other)
+
     def _format_repr(self, value):
         if isinstance(value, bytes):
             if len(value) < 20:
