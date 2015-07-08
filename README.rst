@@ -28,4 +28,4 @@ Or, grab the source from https://github.com/pebble/libpebble2 and: ::
 Documentation
 -------------
 
-It's coming soon!
+`Over here! <https://libpebble2.readthedocs.org/en/latest/>`_

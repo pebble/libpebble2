@@ -29,6 +29,7 @@ with open('libpebble2/version.py') as f:
 setup(name='libpebble2',
       version=__version__,
       description='Library for communicating with pebbles over pebble protocol',
+      long_description=open('README.rst').read(),
       url='https://github.com/pebble/libpebble2',
       author='Pebble Technology Corporation',
       author_email='katharine@pebble.com',
