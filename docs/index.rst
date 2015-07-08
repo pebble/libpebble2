@@ -8,6 +8,9 @@ libpebble2 documentation
    connection
    transports
    protocol
+   services/index
+   exceptions
+   libpebble2
 
 libpebble2 is a python library for interacting with Pebble devices. It:
 
@@ -95,5 +98,3 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
-

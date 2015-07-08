@@ -14,10 +14,29 @@ __all__ = ["AppInstaller"]
 
 
 class AppInstaller(EventSourceMixin):
+    """
+    Installs an app on the Pebble via Pebble Protocol.
+
+    .. note:
+       If you use a :class:`BlobDBClient` in use elsewhere, pass it in here. If none is passed it will create one,
+       and they will conflict.
+
+    :param pebble: The :class:`PebbleConnection` over which to install the app.
+    :type pebble: .PebbleConnection
+    :param pbw_path: The path to the PBW file to be installed on the filesystem.
+    :type pbw_path: str
+    :param blobdb_client: An optional :class:`BlobDBClient` to use, if one already exists. If omitted, one will be
+                          created.
+    :type blobdb_client: .BlobDBClient
+    """
     def __init__(self, pebble, pbw_path, blobdb_client=None):
         self._pebble = pebble
         self._blobdb = blobdb_client or BlobDBClient(pebble)
         EventSourceMixin.__init__(self)
+        #: Total number of bytes sent so far.
+        self.total_sent = 0
+        #: Total number of bytes to send.
+        self.total_size = None
         self._prepare(pbw_path)
 
     def _prepare(self, pbw_path):
@@ -25,7 +44,6 @@ class AppInstaller(EventSourceMixin):
         if not self._bundle.is_app_bundle:
             raise AppInstallError("This is not an app bundle.")
 
-        self.total_sent = 0
         self.total_size = self._bundle.zip.getinfo(self._bundle.get_app_path()).file_size
         if self._bundle.has_resources:
             self.total_size += self._bundle.zip.getinfo(self._bundle.get_resource_path()).file_size
@@ -34,6 +52,13 @@ class AppInstaller(EventSourceMixin):
             self.total_size += self._bundle.zip.getinfo(self._bundle.get_worker_path()).file_size
 
     def install(self):
+        """
+        Installs an app. Blocks until the installation is complete, or raises :exc:`AppInstallError` if it fails.
+
+        While this method runs, "progress" events will be emitted regularly with the following signature: ::
+
+           (sent_this_interval, sent_total, total_size)
+        """
         if self._pebble.firmware_version.major < 3:
             self._install_legacy2()
         else:

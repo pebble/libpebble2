@@ -12,12 +12,30 @@ class EventSourceMixin(object):
         self.__handler = ThreadedEventHandler()
 
     def register_handler(self, event, handler):
+        """
+        Registers a handler to be triggered by an event
+
+        :param event: The event to handle
+        :param handler: The handler callable.
+        :return: A handle that can be used to unregister the handler.
+        """
         return self.__handler.register_handler(event, handler)
 
     def unregister_handler(self, handle):
+        """
+        Unregisters an event handler.
+
+        :param handle: The handle returned from :meth:`register_handler`
+        """
         self.__handler.unregister_handler(handle)
 
     def wait_for_event(self, event):
+        """
+        Block waiting for the given event. Returns the event params.
+
+        :param event: The event to handle.
+        :return: The event params.
+        """
         return self.__handler.wait_for_event(event)
 
     def _broadcast_event(self, event, *args):

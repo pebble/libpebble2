@@ -14,6 +14,22 @@ __all__ = ["BlobDBClient", "SyncWrapper"]
 
 
 class BlobDBClient(EventSourceMixin):
+    """
+    Provides a mechanism for interacting with the Pebble's BlobDB service. All methods are asynchronous.
+    Messages will be retried automatically if they time out, but all error responses from the watch
+    are considered final and will be reported.
+
+    If you want to interact synchronously with BlobDB, see :class:`SyncWrapper`.
+
+    .. note:
+       Avoid having multiple :class:`BlobDBClient` instances attached to a single :class:`PebbleConnection`.
+       They are likely to interfere and cause failures.
+
+    :param pebble: The pebble to connect to.
+    :type pebble: .PebbleConnection
+    :param timeout: The timeout before resending a BlobDB command.
+    :type timeout: int
+    """
     _PendingItem = namedtuple('_PendingItem', ('token', 'data', 'callback'))
     _PendingAck = namedtuple('_PendingAck', ('timestamp', 'data', 'callback'))
 
@@ -41,18 +57,46 @@ class BlobDBClient(EventSourceMixin):
         self._queue.put(item)
 
     def insert(self, database, key, value, callback=None):
+        """
+        Insert an item into the given database.
+
+        :param database: The database into which to insert the value.
+        :type database: .BlobDatabaseID
+        :param key: The key to insert.
+        :type key: uuid.UUID
+        :param value: The value to insert.
+        :type value: bytes
+        :param callback: A callback to be called on success or failure.
+        """
         token = self._get_token()
         self._enqueue(self._PendingItem(token, BlobCommand(token=token, database=database,
                                                            content=InsertCommand(key=key.bytes, value=value)),
                                         callback))
 
     def delete(self, database, key, callback=None):
+        """
+        Delete an item from the given database.
+
+        :param database: The database from which to delete the value.
+        :type database: .BlobDatabaseID
+        :param key: The key to delete.
+        :type key: uuid.UUID
+        :param callback: A callback to be called on success or failure.
+        """
         token = self._get_token()
         self._enqueue(self._PendingItem(token, BlobCommand(token=token, database=database,
                                                            content=DeleteCommand(key=key.bytes)),
                                         callback))
 
     def clear(self, database, callback=None):
+        """
+        Wipe the given database. This only affects items inserted remotely; items inserted on the watch
+        (e.g. alarm clock timeline pins) are not removed.
+
+        :param database: The database to wipe.
+        :type database: .BlobDatabaseID
+        :param callback: A callback to be called on success or failure.
+        """
         token = self._get_token()
         self._enqueue(self._PendingItem(token, BlobCommand(token=token, database=database,
                                                            content=ClearCommand()),
@@ -90,6 +134,16 @@ class BlobDBClient(EventSourceMixin):
 
 
 class SyncWrapper(object):
+    """
+    Wraps a :class:`BlobDBClient` call and returns when it completes.
+
+    Use it like this: ::
+
+       SyncWrapper(blobdb_client.insert, some_key, some_value).wait()
+
+    :param method: The method to call.
+    :param args: Arguments to pass to the method.
+    """
     def __init__(self, method, *args, **kwargs):
         self.event = threading.Event()
         self.result = None

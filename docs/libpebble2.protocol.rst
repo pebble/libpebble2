@@ -1,13 +1,6 @@
 libpebble2.protocol package
 ===========================
 
-Subpackages
------------
-
-.. toctree::
-
-    libpebble2.protocol.base
-
 Submodules
 ----------
 
@@ -111,15 +104,6 @@ libpebble2.protocol.transfers module
 ------------------------------------
 
 .. automodule:: libpebble2.protocol.transfers
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: libpebble2.protocol
     :members:
     :undoc-members:
     :show-inheritance:

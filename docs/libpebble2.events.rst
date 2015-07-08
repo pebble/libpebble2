@@ -1,9 +1,6 @@
 libpebble2.events package
 =========================
 
-Submodules
-----------
-
 libpebble2.events.mixin module
 ------------------------------
 

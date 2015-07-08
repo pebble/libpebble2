@@ -15,11 +15,34 @@ NotificationSource = LegacyNotification.Source
 
 
 class Notifications(object):
+    """
+    Sends simple notifications.
+
+    .. note:
+       If a :class:`BlobDBClient` already exists for the given :class:`PebbleConnection`, you should pass that in here
+       to avoid conflicts.
+
+    :param pebble: The Pebble to send a notification to.
+    :type pebble: .PebbleConnection
+    :param blobdb: An existing :class:`BlobDBClient`, if any. If necessary, one will be created.
+    """
     def __init__(self, pebble, blobdb=None):
         self._pebble = pebble
         self._blobdb = blobdb or BlobDBClient(pebble)
 
     def send_notification(self, subject="", message="", sender="", source=None):
+        """
+        Sends a notification. Blocks as long as necessary.
+
+        :param subject: The subject.
+        :type subject: str
+        :param message: The message.
+        :type message: str
+        :param sender: The sender.
+        :type sender: str
+        :param source: The source of the notification
+        :type source: .LegacyNotification.Source
+        """
         if self._pebble.firmware_version.major < 3:
             self._send_legacy_notification(subject, message, sender, source)
         else:

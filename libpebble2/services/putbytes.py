@@ -22,6 +22,23 @@ class PutBytesType(IntEnum):
 
 
 class PutBytes(EventSourceMixin):
+    """
+    Synchronously sends data to the watch over PutBytes.
+
+    :param pebble: The Pebble to send data to.
+    :type pebble: .PebbleConnection
+    :param object_type: The type of data being sent.
+    :type object_type: .PutBytesType
+    :param object: The data to send.
+    :type object: bytes
+    :param bank: The bank to install the data to, if applicable.
+    :type bank: int
+    :param filename: The filename of the data, if applicable
+    :type filename: str
+    :param app_install_id: This is used during app installations on 3.x. It is mutually exclusive with ``bank`` and
+        ``filename``.
+    :type app_install_id: int
+    """
     def __init__(self, pebble, object_type, object, bank=None, filename="", app_install_id=None):
         self._pebble = pebble
         self._object_type = object_type
@@ -34,6 +51,13 @@ class PutBytes(EventSourceMixin):
         EventSourceMixin.__init__(self)
 
     def send(self):
+        """
+        Sends the object to the watch. Block until completion, or raises :exc:`.PutBytesError` on failure.
+
+        During transmission, a "progress" event will be periodically emitted with the following signature: ::
+
+           (sent_this_interval, sent_so_far, total_object_size)
+        """
         # Prepare the watch to receive something.
         cookie = self._prepare()
 
