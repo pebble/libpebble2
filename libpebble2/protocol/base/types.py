@@ -30,7 +30,7 @@ class Field(object):
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         try:
-            value, length = struct.unpack_from((self.endianness or default_endianness)
+            value, length = struct.unpack_from(str(self.endianness or default_endianness)
                                       + self.struct_format, buffer, offset)[0], struct.calcsize(self.struct_format)
             if self._enum is not None:
                 return self._enum(value), length
@@ -40,7 +40,7 @@ class Field(object):
             raise PacketDecodeError("{}: {}".format(self.type, e))
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        return struct.pack((self.endianness or default_endianness) + self.struct_format, value)
+        return struct.pack(str(self.endianness or default_endianness) + self.struct_format, value)
 
     def prepare(self, obj, value):
         pass
@@ -168,16 +168,27 @@ class PascalString(Field):
         super(PascalString, self).__init__(*args, **kwargs)
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
-        length, = struct.unpack_from('B', buffer, offset)
-        return buffer[offset+1:offset+1+length].split(b'\x00')[0].decode('utf-8'), length + 1
+        try:
+            length, = struct.unpack_from('B', buffer, offset)
+        except struct.error as e:
+            raise PacketDecodeError("{}: {}".format(self.type, str(e)))
+        extra_bytes = 1
+        if self.null_terminated and not self.count_null_terminator:
+            extra_bytes += 1
+        if len(buffer) < offset + length + extra_bytes:
+            raise PacketDecodeError("{}: Expected {} bytes, but only had {}".format(
+                self.type, length + extra_bytes, len(buffer) - offset))
+        return buffer[offset+1:offset+1+length].split(b'\x00')[0].decode('utf-8'), length + extra_bytes
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
         value = value[:255].encode('utf-8')
         if self.null_terminated:
-            value = value[:254] + '\x00'
-            length = len(value)
-            if not self.count_null_terminator:
-                length -= 1
+            if self.count_null_terminator:
+                value = value[:254] + b'\x00'
+                length = len(value)
+            else:
+                value = value[:255] + b'\x00'
+                length = len(value) - 1
         else:
             length = len(value)
         return struct.pack('B', length) + value
@@ -186,7 +197,10 @@ class PascalString(Field):
 class NullTerminatedString(Field):
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         end = offset
-        while buffer[end] != '\x00':
+        if end >= len(buffer):
+            raise PacketDecodeError("{}: No bytes available.")
+        while buffer[end] != b'\x00'[0]:
+            print(buffer[end])
             end += 1
             if end >= len(buffer):
                 raise PacketDecodeError("{}: Reached end of buffer without terminating.".format(self.type))
@@ -203,7 +217,7 @@ class FixedString(Field):
 
     def prepare(self, obj, value):
         if isinstance(self.length, Field):
-            setattr(obj, self.length._name, len(value))
+            setattr(obj, self.length._name, len(value.encode('utf-8')))
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         if isinstance(self.length, Field):
@@ -280,7 +294,11 @@ class FixedList(Field):
 
         if isinstance(self.length, Field):
             current = getattr(obj, self.length._name) or 0
-            setattr(obj, self.length._name, current + sum(len(x.serialise()) for x in value))
+            if isinstance(self.member_type, Field):
+                total_length = sum(len(self.member_type.value_to_bytes(obj, x)) for x in value)
+            else:
+                total_length = sum(len(x.serialise()) for x in value)
+            setattr(obj, self.length._name, current + total_length)
 
 
     def value_to_bytes(self, obj, values, default_endianness=DEFAULT_ENDIANNESS):
@@ -296,12 +314,17 @@ class FixedList(Field):
         results = []
         length = 0
         max_count = None
+        max_length = None
 
         if isinstance(self.count, Field):
             max_count = getattr(obj, self.count._name)
 
+        if isinstance(self.length, Field):
+            max_length = getattr(obj, self.length._name)
+
         i = 0
-        while offset + length < len(buffer) and (max_count is None or i < max_count):
+        while (offset + length < len(buffer) and (max_count is None or i < max_count)
+               and (max_length is None or offset + length < max_length)):
             if isinstance(self.member_type, Field):
                 value, item_length = self.member_type.buffer_to_value(obj, buffer, offset+length,
                                                                       default_endianness=default_endianness)
@@ -326,17 +349,28 @@ class BinaryArray(Field):
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
         if not isinstance(value, bytes):
             raise TypeError("BinaryArrays must receive 'bytes'; got '{}'".format(value))
+
+        if isinstance(self.length, Field):
+            length = getattr(obj, self.length._name)
+        elif self.length is not None:
+            length = self.length
+        else:
+            return value
+        value = value[:length]
+        value += b'\x00' * (length - len(value))
         return value
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
         if isinstance(self.length, Field):
             length = getattr(obj, self.length._name)
-            return buffer[offset:offset+length], length
         elif self.length is None:
             length = len(buffer) - offset
-            return buffer[offset:], length
         else:
-            return buffer[offset:offset+self.length], self.length
+            length = self.length
+        if len(buffer) - offset < length:
+            raise PacketDecodeError("{}: Expected more bytes (wanted {}; got {}).".format(self.type, length,
+                                                                                          len(buffer) - offset))
+        return buffer[offset:offset+length], length
 
 
 class Optional(Field):
