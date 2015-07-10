@@ -2,11 +2,13 @@ from __future__ import absolute_import
 
 __author__ = 'katharine'
 
+import socket
 import struct
 import websocket
 
 from .. import BaseTransport, MessageTarget, MessageTargetWatch
 from .protocol import WebSocketRelayToWatch, WebSocketRelayFromWatch, endpoints, from_watch
+from libpebble2.exceptions import ConnectionError
 
 
 class MessageTargetPhone(MessageTarget):
@@ -33,7 +35,10 @@ class WebsocketTransport(BaseTransport):
         """:type: websocket.WebSocket"""
 
     def connect(self):
-        self.ws = websocket.create_connection(self.url)
+        try:
+            self.ws = websocket.create_connection(self.url)
+        except (websocket.WebSocketException, socket.error) as e:
+            raise ConnectionError(str(e))
 
     @property
     def connected(self):
