@@ -64,3 +64,18 @@ Messages directed at the emulator itself, rather than the firmware running on it
 .. autoclass:: libpebble2.communication.transports.qemu.MessageTargetQemu
     :members:
     :show-inheritance:
+
+Serial transport
+----------------
+
+It is possible to connect directly to the Pebble using :class:`.SerialTransport`. This transport uses the operating
+system's built-in Bluetooth serial support to communicate with the watch using
+`pyserial <http://pyserial.sourceforge.net/index.html>`_. Using this transport requires the Pebble to already be paired
+with the computer. Recall that the Pebble may only connect to one device at a time; disconnect any connected phones
+(e.g. by disabling Bluetooth) before attempting to pair with your computer or use this transport.
+
+Since this transport connects directly to the watch, it does not define any other message targets.
+
+.. autoclass:: libpebble2.communication.transports.serial.SerialTransport
+    :members:
+    :show-inheritance:

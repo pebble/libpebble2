@@ -9,6 +9,17 @@ from libpebble2.exceptions import ConnectionError
 
 
 class SerialTransport(BaseTransport):
+    """
+    Represents a direct connection to a physical Pebble paired to the computer via Bluetooth serial.
+    This transport expects to be given a device file over which it can communicate with the watch via Bluetooth.
+
+    .. warning:
+        Using this transport may cause occasional kernel panics on some versions of OS X.
+
+    :param device: The path to the device file (on OS X, often of the form ``/dev/cu.PebbleTimeXXXX-SerialPo`` or
+                   ``/dev/cu.PebbleXXXX-SerialPortSe``).
+    :type device: str
+    """
     must_initialise = True
 
     def __init__(self, device):
