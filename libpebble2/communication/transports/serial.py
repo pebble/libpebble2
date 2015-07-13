@@ -33,6 +33,8 @@ class SerialTransport(BaseTransport):
         except OSError as e:
             if e.errno == errno.EBUSY:
                 raise ConnectionError("Could not connect to Pebble.")
+            else:
+                raise
 
     @property
     def connected(self):
