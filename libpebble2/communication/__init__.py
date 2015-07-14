@@ -185,7 +185,7 @@ class PebbleConnection(object):
         """
         return self.event_handler.unregister_handler(handle)
 
-    def read_from_endpoint(self, endpoint):
+    def read_from_endpoint(self, endpoint, timeout=10):
         """
         Blocking read from an endpoint. Will block until a message is received, or it times out. Also see
         :meth:`get_endpoint_queue` if you are considering calling this in a loop.
@@ -195,9 +195,10 @@ class PebbleConnection(object):
 
         :param endpoint: The endpoint to read from.
         :type endpoint: .PacketType
+        :param timeout: The maximum time to wait before raising :exc:`.TimeoutError`.
         :return: The message read from the endpoint; of the same type as passed to ``endpoint``.
         """
-        return self.event_handler.wait_for_event((_EventType.Watch, endpoint))
+        return self.event_handler.wait_for_event((_EventType.Watch, endpoint), timeout=timeout)
 
     def get_endpoint_queue(self, endpoint):
         """
@@ -212,7 +213,7 @@ class PebbleConnection(object):
         """
         return self.event_handler.queue_events((_EventType.Watch, endpoint))
 
-    def read_transport_message(self, origin, message_type):
+    def read_transport_message(self, origin, message_type, timeout=10):
         """
         Blocking read of a transport message that does not indicate a message from the Pebble.
         Will block until a message is received, or it times out.
@@ -222,9 +223,10 @@ class PebbleConnection(object):
 
         :param origin: The type of :class:`.MessageTarget` that triggers the message.
         :param message_type: The class of the message to read from the transport.
+        :param timeout: The maximum time to wait before raising :exc:`.TimeoutError`.
         :return: The object read from the transport; of the same type as passed to ``message_type``.
         """
-        return self.event_handler.wait_for_event((_EventType.Transport, origin, message_type))
+        return self.event_handler.wait_for_event((_EventType.Transport, origin, message_type), timeout=timeout)
 
     def send_packet(self, packet):
         """

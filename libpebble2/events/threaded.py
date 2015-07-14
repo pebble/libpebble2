@@ -33,8 +33,8 @@ class ThreadedEventHandler(BaseEventHandler):
             del self._handlers[self._handle_map[handle]][handle]
             del self._handle_map[handle]
 
-    def wait_for_event(self, event):
-        return _BlockingEventWait(self, event).wait()
+    def wait_for_event(self, event, timeout=10):
+        return _BlockingEventWait(self, event).wait(timeout=timeout)
 
     def queue_events(self, event):
         return _QueuedEventWait(self, event)
