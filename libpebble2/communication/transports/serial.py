@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 __author__ = 'katharine'
 
+import errno
 import serial
 import struct
 
@@ -27,14 +28,24 @@ class SerialTransport(BaseTransport):
         self.connection = None
 
     def connect(self):
-        self.connection = serial.Serial(self.device, 115200, timeout=5)
+        try:
+            self.connection = serial.Serial(self.device, 115200)
+        except OSError as e:
+            if e.errno == errno.EBUSY:
+                raise ConnectionError("Could not connect to Pebble.")
+            else:
+                raise
 
     @property
     def connected(self):
         return self.connection is not None and self.connection.isOpen()
 
     def read_packet(self):
-        data = self.connection.read(2)
+        try:
+            data = self.connection.read(2)
+        except serial.SerialException:
+            self.connection.close()
+            raise ConnectionError("Disconnected from watch.")
         if len(data) < 2:
             raise ConnectionError("Got malformed packet.")
 

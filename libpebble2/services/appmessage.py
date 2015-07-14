@@ -58,7 +58,7 @@ class AppMessageService(EventSourceMixin):
                 else:
                     result[t.key] = struct.unpack(self._type_mapping[(t.type, t.length)], t.data)
             self._broadcast_event("appmessage", packet.transaction_id, message.uuid, result)
-            self._pebble.send_packet(AppMessage(transaction_id=packet.transaction_id, message=AppMessageACK()))
+            self._pebble.send_packet(AppMessage(transaction_id=packet.transaction_id, data=AppMessageACK()))
         else:
             if packet.transaction_id in self._pending_messages:
                 uuid = self._pending_messages[packet.transaction_id]
