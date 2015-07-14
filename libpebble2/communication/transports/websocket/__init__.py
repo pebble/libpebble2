@@ -8,7 +8,7 @@ import websocket
 
 from .. import BaseTransport, MessageTarget, MessageTargetWatch
 from .protocol import WebSocketRelayToWatch, WebSocketRelayFromWatch, endpoints, from_watch
-from libpebble2.exceptions import ConnectionError
+from libpebble2.exceptions import ConnectionError, PebbleError
 
 
 class MessageTargetPhone(MessageTarget):
@@ -68,3 +68,7 @@ class WebsocketTransport(BaseTransport):
             else:
                 packet, length = from_watch[endpoint].parse(message[1:])
                 return MessageTargetPhone(), packet
+        elif opcode == websocket.ABNF.OPCODE_CLOSE:
+            raise ConnectionError("Connection gracefully closed by peer.")
+        else:
+            raise PebbleError("Got unexpected WebSocket opcode {}".format(opcode))
