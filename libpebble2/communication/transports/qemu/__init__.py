@@ -95,7 +95,7 @@ class QemuTransport(BaseTransport):
                 if not target.raw:
                     self.socket.send(QemuPacket(data=message).serialise())
                 else:
-                    self.socket.send(QemuRawPacket(protocol=target.protocol, data=message))
+                    self.socket.send(QemuRawPacket(protocol=target.protocol, data=message).serialise())
             else:
                 assert False
         except socket.error as e:
