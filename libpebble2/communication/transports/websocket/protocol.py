@@ -81,6 +81,10 @@ class AppConfigCancelled(PebblePacket):
     pass
 
 
+class AppConfigURL(PebblePacket):
+    data = PascalString()
+
+
 class WebSocketPhonesimAppConfig(PebblePacket):
     command = Uint8()
     config = Union(command, {
@@ -89,6 +93,12 @@ class WebSocketPhonesimAppConfig(PebblePacket):
         0x03: AppConfigCancelled,
     })
 
+class WebSocketPhonesimConfigResponse(PebblePacket):
+    command = Uint8()
+
+    config = Union(command, {
+        0x01: AppConfigURL
+    })
 
 class WebSocketRelayQemu(PebblePacket):
     protocol = Uint8()
@@ -138,6 +148,7 @@ from_watch = {
     0x07: WebSocketConnectionStatusUpdate,
     0x08: WebSocketProxyConnectionStatusUpdate,
     0x09: WebSocketProxyAuthenticationResponse,
+    0x0a: WebSocketPhonesimConfigResponse,
     0x0c: WebSocketTimelineResponse,
 }
 
