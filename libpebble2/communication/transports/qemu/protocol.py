@@ -54,6 +54,10 @@ class QemuAccel(PebblePacket):
     samples = FixedList(QemuAccelSample, count=count)
 
 
+class QemuAccelResponse(PebblePacket):
+    remaining_space = Uint16()
+
+
 class QemuVibration(PebblePacket):
     state = Optional(Boolean())
 
@@ -79,8 +83,19 @@ class QemuPacket(PebblePacket):
         4: QemuCompass,
         5: QemuBattery,
         6: QemuAccel,
-        7: QemuVibration,
         8: QemuButton,
+    }, length=length)
+    footer = Uint16(default=FOOTER_SIGNATURE)
+
+
+class QemuInboundPacket(PebblePacket):
+    signature = Uint16(default=HEADER_SIGNATURE)
+    protocol = Uint16()
+    length = Uint16()
+    data = Union(protocol, {
+        1: QemuSPP,
+        6: QemuAccelResponse,
+        7: QemuVibration,
     }, length=length)
     footer = Uint16(default=FOOTER_SIGNATURE)
 
