@@ -59,6 +59,12 @@ class QemuVibration(PebblePacket):
 
 
 class QemuButton(PebblePacket):
+    class Button(IntEnum):
+        Back = 1
+        Up = 2
+        Select = 4
+        Down = 8
+
     state = Uint8()
 
 
