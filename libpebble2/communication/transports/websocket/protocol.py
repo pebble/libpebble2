@@ -74,7 +74,8 @@ class AppConfigSetup(PebblePacket):
 
 
 class AppConfigResponse(PebblePacket):
-    data = PascalString()
+    length = Uint32()
+    data = FixedString(length=length)
 
 
 class AppConfigCancelled(PebblePacket):
@@ -82,7 +83,8 @@ class AppConfigCancelled(PebblePacket):
 
 
 class AppConfigURL(PebblePacket):
-    data = PascalString()
+    length = Uint32()
+    data = FixedString(length=length)
 
 
 class WebSocketPhonesimAppConfig(PebblePacket):
