@@ -95,12 +95,14 @@ class WebSocketPhonesimAppConfig(PebblePacket):
         0x03: AppConfigCancelled,
     })
 
+
 class WebSocketPhonesimConfigResponse(PebblePacket):
     command = Uint8()
 
     config = Union(command, {
         0x01: AppConfigURL
     })
+
 
 class WebSocketRelayQemu(PebblePacket):
     protocol = Uint8()
