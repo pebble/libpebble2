@@ -218,7 +218,7 @@ class ModelRequest(PebblePacket):
 
 
 class ModelResponse(PebblePacket):
-    length = Uint32()
+    length = Uint8()
     data = BinaryArray(length=length)
 
 

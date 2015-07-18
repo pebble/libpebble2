@@ -74,11 +74,17 @@ class AppConfigSetup(PebblePacket):
 
 
 class AppConfigResponse(PebblePacket):
-    data = PascalString()
+    length = Uint32()
+    data = FixedString(length=length)
 
 
 class AppConfigCancelled(PebblePacket):
     pass
+
+
+class AppConfigURL(PebblePacket):
+    length = Uint32()
+    data = FixedString(length=length)
 
 
 class WebSocketPhonesimAppConfig(PebblePacket):
@@ -87,6 +93,14 @@ class WebSocketPhonesimAppConfig(PebblePacket):
         0x01: AppConfigSetup,
         0x02: AppConfigResponse,
         0x03: AppConfigCancelled,
+    })
+
+
+class WebSocketPhonesimConfigResponse(PebblePacket):
+    command = Uint8()
+
+    config = Union(command, {
+        0x01: AppConfigURL
     })
 
 
@@ -138,6 +152,7 @@ from_watch = {
     0x07: WebSocketConnectionStatusUpdate,
     0x08: WebSocketProxyConnectionStatusUpdate,
     0x09: WebSocketProxyAuthenticationResponse,
+    0x0a: WebSocketPhonesimConfigResponse,
     0x0c: WebSocketTimelineResponse,
 }
 
