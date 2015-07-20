@@ -61,7 +61,10 @@ class Field(object):
             value, length = struct.unpack_from(str(self.endianness or default_endianness)
                                       + self.struct_format, buffer, offset)[0], struct.calcsize(self.struct_format)
             if self._enum is not None:
-                return self._enum(value), length
+                try:
+                    return self._enum(value), length
+                except ValueError as e:
+                    raise PacketDecodeError("{}: {}".format(self.type, e))
             else:
                 return value, length
         except struct.error as e:

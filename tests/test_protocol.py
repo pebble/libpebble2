@@ -5,6 +5,7 @@ __author__ = 'katharine'
 from six import PY3
 import pytest
 
+from enum import IntEnum, Enum
 import uuid
 
 from libpebble2.exceptions import PacketDecodeError
@@ -74,6 +75,23 @@ def test_uint16_serialise(packet):
         ('<', 65534, b'\xFE\xFF'),
         ('<', 0, b'\x00\x00'),
     ])
+
+def test_uint8_enum_deserialise(packet):
+    class TestEnum(Enum):
+        Foo = 0x01
+        Bar = 0x02
+
+    field = Uint8(enum=TestEnum)
+    assert field.buffer_to_value(packet, b'\x01', 0) == (TestEnum.Foo, 1)
+
+def test_uint8_enum_deserialise_error(packet):
+    class TestEnum(Enum):
+        Foo = 0x01
+        Bar = 0x02
+
+    field = Uint8(enum=TestEnum)
+    with pytest.raises(PacketDecodeError):
+        field.buffer_to_value(packet, b'\x03', 0)
 
 def test_bool_serialise(packet):
     field = Boolean()
