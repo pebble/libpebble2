@@ -111,8 +111,8 @@ class PebbleConnection(object):
         while len(message) >= 4:
             if self.log_protocol_level is not None:
                 logger.log(self.log_protocol_level, "<- %s", hexlify(message).decode())
-            self.event_handler.broadcast_event("raw_inbound", message)
             packet, length = PebblePacket.parse_message(message)
+            self.event_handler.broadcast_event("raw_inbound", message[:length])
             if self.log_packet_level is not None:
                 logger.log(self.log_packet_level, "<- %s", packet)
             message = message[length:]
