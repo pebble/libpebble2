@@ -3,3 +3,4 @@ enum34==1.0.4
 six==1.9.0
 websocket-client==0.31.0
 wsgiref==0.1.2
+pyserial>=2.7

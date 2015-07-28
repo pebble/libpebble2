@@ -7,6 +7,7 @@ from .audio import *
 from .blobdb import *
 from .datalogging import *
 from .logs import *
+from .meta import *
 from .music import *
 from .screenshots import *
 from .phone import *

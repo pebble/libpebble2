@@ -6,7 +6,7 @@ libpebble2
 
 libpebble2 is a python library for interacting with Pebble devices. It:
 
-* Supports connections to Pebble QEMU instances and to watches via the Pebble mobile app
+* Supports connections to Pebble QEMU instances and to watches via the Pebble mobile app or Bluetooth serial.
 * Supports connection to watches running both 2.x and 3.x firmware on aplite or basalt hardware
 * Provides automatic serialisation and deserialisation of pebble protocol messages
 * Asynchronous information is provided by a usable event system
@@ -28,4 +28,4 @@ Or, grab the source from https://github.com/pebble/libpebble2 and: ::
 Documentation
 -------------
 
-It's coming soon!
+`Over here! <https://libpebble2.readthedocs.org/en/latest/>`_

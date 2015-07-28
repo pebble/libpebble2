@@ -4,7 +4,7 @@ __author__ = 'katharine'
 import socket
 
 from .. import BaseTransport, MessageTarget, MessageTargetWatch
-from .protocol import QemuPacket, QemuSPP, QemuRawPacket, HEADER_SIGNATURE, FOOTER_SIGNATURE
+from .protocol import QemuPacket, QemuInboundPacket, QemuSPP, QemuRawPacket, HEADER_SIGNATURE, FOOTER_SIGNATURE
 from libpebble2.exceptions import ConnectionError
 from libpebble2.protocol.base.types import PacketDecodeError
 
@@ -69,7 +69,7 @@ class QemuTransport(BaseTransport):
                 self._connected = False
                 raise ConnectionError("Disconnected.")
             try:
-                packet, length = QemuPacket.parse(self.assembled_data)
+                packet, length = QemuInboundPacket.parse(self.assembled_data)
             except PacketDecodeError:
                 continue
             else:
@@ -95,7 +95,7 @@ class QemuTransport(BaseTransport):
                 if not target.raw:
                     self.socket.send(QemuPacket(data=message).serialise())
                 else:
-                    self.socket.send(QemuRawPacket(protocol=target.protocol, data=message))
+                    self.socket.send(QemuRawPacket(protocol=target.protocol, data=message).serialise())
             else:
                 assert False
         except socket.error as e:

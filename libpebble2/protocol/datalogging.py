@@ -25,7 +25,7 @@ class DataLoggingDespoolOpenSession(PebblePacket):
     timestamp = Uint32()
     log_tag = Uint32()
     data_item_type = Uint8(enum=ItemType)
-    data_item_size = Uint8()
+    data_item_size = Uint16()
 
 
 class DataLoggingDespoolSendData(PebblePacket):

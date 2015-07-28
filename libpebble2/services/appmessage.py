@@ -52,13 +52,13 @@ class AppMessageService(EventSourceMixin):
             for t in message.dictionary:
                 assert isinstance(t, AppMessageTuple)
                 if t.type == AppMessageTuple.Type.ByteArray:
-                    result[t.key] = t.data
+                    result[t.key] = bytearray(t.data)
                 elif t.type == AppMessageTuple.Type.CString:
                     result[t.key] = t.data.split('\x00')[0]
                 else:
-                    result[t.key] = struct.unpack(self._type_mapping[(t.type, t.length)], t.data)
+                    result[t.key], = struct.unpack(self._type_mapping[(t.type, t.length)], t.data)
             self._broadcast_event("appmessage", packet.transaction_id, message.uuid, result)
-            self._pebble.send_packet(AppMessage(transaction_id=packet.transaction_id, message=AppMessageACK()))
+            self._pebble.send_packet(AppMessage(transaction_id=packet.transaction_id, data=AppMessageACK()))
         else:
             if packet.transaction_id in self._pending_messages:
                 uuid = self._pending_messages[packet.transaction_id]

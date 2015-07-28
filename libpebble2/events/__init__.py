@@ -33,11 +33,12 @@ class BaseEventHandler(with_metaclass(ABCMeta)):
         pass
 
     @abstractmethod
-    def wait_for_event(self, event):
+    def wait_for_event(self, event, timeout=10):
         """
         A blocking wait for an event to be fired.
 
         :param event: The event to wait on.
+        :param timeout: How long to wait before raising :exc:`.TimeoutError`
         :return: The arguments that were passed to :meth:`broadcast_event`.
         """
         pass
@@ -76,7 +77,7 @@ class BaseEventQueue(with_metaclass(ABCMeta)):
         pass
 
     @abstractmethod
-    def get(self):
+    def get(self, timeout=10):
         """
         Get the next event in the queue. Blocks until an item is available.
         """

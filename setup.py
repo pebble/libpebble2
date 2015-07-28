@@ -29,6 +29,7 @@ with open('libpebble2/version.py') as f:
 setup(name='libpebble2',
       version=__version__,
       description='Library for communicating with pebbles over pebble protocol',
+      long_description=open('README.rst').read(),
       url='https://github.com/pebble/libpebble2',
       author='Pebble Technology Corporation',
       author_email='katharine@pebble.com',
@@ -37,6 +38,7 @@ setup(name='libpebble2',
       install_requires=[
         'enum34>=1.0.4',
         'websocket-client>=0.31.0',
+        'pyserial>=2.7',
         'six>=1.9.0',
       ],
       tests_require=[

@@ -84,8 +84,20 @@ class SystemMessage(PebblePacket):
         endpoint = 0x12
         endianness = '<'
 
-    kind = Uint8(default=0x00)
-    message_type = Uint8()
+    class Type(IntEnum):
+        NewFirmwareAvailable = 0x00
+        FirmwareUpdateStart = 0x01
+        FirmwareUpdateComplete = 0x02
+        FirmwareUpdateFailed = 0x03
+        FirmwareUpToDate = 0x04
+        StopReconnecting = 0x06
+        StartReconnecting = 0x07
+        MAPDisabled = 0x08
+        MAPENabled = 0x09
+        FirmwareUpdateStartResponse = 0x0a
+
+    command = Uint8(default=0x00)
+    message_type = Uint8(enum=Type)
     extra_data = Union(message_type, {
         0x0a: FirmwareUpdateStartResponse,
     }, accept_missing=True)
@@ -206,7 +218,7 @@ class ModelRequest(PebblePacket):
 
 
 class ModelResponse(PebblePacket):
-    length = Uint32()
+    length = Uint8()
     data = BinaryArray(length=length)
 
 
