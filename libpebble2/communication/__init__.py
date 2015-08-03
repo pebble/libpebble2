@@ -334,7 +334,7 @@ class PebbleConnection(object):
     @property
     def watch_platform(self):
         """
-        A string naming the platform of the watch ('aplite', 'basalt', or 'unknown').
+        A string naming the platform of the watch ('aplite', 'basalt', 'chalk', or 'unknown').
 
         .. note:
            This is a blocking call if :meth:`fetch_watch_info` has not yet been called, which could lead to deadlock
