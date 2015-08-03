@@ -4,8 +4,7 @@ __author__ = 'katharine'
 from .base import PebblePacket
 from .base.types import *
 
-__all__ = ["StartTransfer", "EncoderFrame", "DataTransfer", "StopTransfer",
-           "AudioStream"]
+__all__ = ["EncoderFrame", "DataTransfer", "StopTransfer", "AudioStream"]
 
 
 class EncoderFrame(PebblePacket):

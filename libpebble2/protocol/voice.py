@@ -6,9 +6,9 @@ from enum import IntEnum
 from .base import PebblePacket
 from .base.types import *
 
-__all__ = ["AudioCodec", "SpeexEncoderInfo", "AppUuid", "Transcription", "AttributeType", "Attribute", "AttributeList",
+__all__ = ["AudioCodec", "SpeexEncoderInfo", "Transcription", "AttributeType", "Attribute", "AttributeList",
            "SessionType", "Command", "SessionSetupCommand", "VoiceControlCommand", "Result", "SessionSetupResult",
-           "DictationResult", "VoiceControlResult"]
+           "DictationResult", "VoiceControlResult", "Word", "Sentence", "SentenceList", "TranscriptionType", "AppUuid"]
 
 
 class AudioCodec(IntEnum):
@@ -23,27 +23,35 @@ class SpeexEncoderInfo(PebblePacket):
     frame_size = Uint16()
 
 
+class Word(PebblePacket):
+    confidence = Uint8()
+    length = Uint16()
+    data = FixedString(length=length)
+
+
+class Sentence(PebblePacket):
+    count = Uint16()
+    words = FixedList(Word, count=count)
+
+
+class SentenceList(PebblePacket):
+    count = Uint8()
+    sentences = FixedList(Sentence, count=count)
+
+
+class TranscriptionType(IntEnum):
+    SentenceList = 0x01
+
+
 class Transcription(PebblePacket):
-    class Word(PebblePacket):
-        confidence = Uint8()
-        length = Uint16()
-        data = FixedString(length=length)
-
-    class Sentence(PebblePacket):
-        count = Uint16()
-        words = FixedList(Transcription.Word, count=count)
-
-    class SentenceList(PebblePacket):
-        count = Uint8()
-        sentences = FixedList(Transcription.Sentence, count=count)
-
-    class TranscriptionType(IntEnum):
-        SentenceList = 0x01
-
     type = Uint8(enum=TranscriptionType)
     transcription = Union(type, {
         TranscriptionType.SentenceList: SentenceList
     })
+
+
+class AppUuid(PebblePacket):
+    uuid = UUID()
 
 
 class AttributeType(IntEnum):
@@ -59,9 +67,8 @@ class Attribute(PebblePacket):
     data = Union(id, {
         AttributeType.SpeexEncoderInfo: SpeexEncoderInfo,
         AttributeType.Transcription: Transcription,
-        AttributeType.AppUuid: UUID,
+        AttributeType.AppUuid: AppUuid,
     }, length=length, accept_missing=True)
-
 
 
 class AttributeList(PebblePacket):
@@ -82,7 +89,7 @@ class AttributeList(PebblePacket):
         return None
 
     def is_empty(self):
-        return self.dictionary.count == 0
+        return len(self.dictionary) == 0
 
 
 class SessionType(IntEnum):

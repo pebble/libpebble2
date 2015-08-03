@@ -10,6 +10,7 @@ from libpebble2.protocol.audio import *
 
 __all__ = ["VoiceServer"]
 
+
 class VoiceServer(EventSourceMixin):
     SESSION_ID_INVALID = 0
 
@@ -75,7 +76,7 @@ class VoiceServer(EventSourceMixin):
             self._broadcast_event("voice:audio_stop", self._session_id)
 
     def send_stop_audio(self):
-        self._pebble.send_packet(AudioStream(session_id=self._session_id, message=StopTransfer))
+        self._pebble.send_packet(AudioStream(session_id=self._session_id, message=StopTransfer()))
 
     def send_session_setup_result(self, app_uuid, result):
         assert isinstance(app_uuid, uuid.UUID)
