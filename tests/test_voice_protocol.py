@@ -5,7 +5,6 @@ __author__ = 'andrews'
 import unittest
 import uuid
 import array
-from binascii import hexlify
 
 from libpebble2.protocol.voice import *
 
