@@ -26,8 +26,9 @@ class TestVoiceProtocol(unittest.TestCase):
                                                        ))
         attributes.append(encoder_info)
         attr_list = AttributeList(dictionary=attributes)
-        packet = VoiceControlCommand(flags=1, data=SessionSetupCommand(session_type=SessionType.Dictation,
-                                                                       session_id=0x55, attributes=attr_list))
+        packet = VoiceControlCommand(flags=Flags.AppInitiated,
+                                     data=SessionSetupCommand(session_type=SessionType.Dictation,
+                                                              session_id=0x55, attributes=attr_list))
         data = [0x01,                    # Message ID: Session setup
                 0x01, 0x00, 0x00, 0x00,  # flags
                 0x01,                    # Dictation session
@@ -51,7 +52,7 @@ class TestVoiceProtocol(unittest.TestCase):
 
         cmd = VoiceControlCommand.parse(packet.serialise())[0]
 
-        self.assertEqual(cmd.flags, 1)
+        self.assertEqual(cmd.flags, Flags.AppInitiated)
         self.assertEqual(cmd.command, Command.SessionSetup)
         self.assertIsInstance(cmd.data, SessionSetupCommand)
         setup = cmd.data
@@ -68,7 +69,6 @@ class TestVoiceProtocol(unittest.TestCase):
         self.assertEqual(attributes[1].data.bitstream_version, 4)
         self.assertEqual(attributes[1].data.frame_size, 320)
 
-
     def test_session_setup_result(self):
         data = [0x01,                    # Message ID: Session setup
                 0x01, 0x00, 0x00, 0x00,  # flags
@@ -77,10 +77,9 @@ class TestVoiceProtocol(unittest.TestCase):
                 ]
         serial = array.array('B', data).tostring()
 
-        msg = VoiceControlResult(flags=1, data=SessionSetupResult(session_type=SessionType.Dictation,
-                                                                  result=Result.Success))
+        msg = VoiceControlResult(flags=Flags.AppInitiated,
+                                 data=SessionSetupResult(session_type=SessionType.Dictation, result=Result.Success))
         self.assertEqual(serial, msg.serialise())
-
 
     def test_transcription(self):
         expected = [

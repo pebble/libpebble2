@@ -8,7 +8,8 @@ from .base.types import *
 
 __all__ = ["AudioCodec", "SpeexEncoderInfo", "Transcription", "AttributeType", "Attribute", "AttributeList",
            "SessionType", "Command", "SessionSetupCommand", "VoiceControlCommand", "Result", "SessionSetupResult",
-           "DictationResult", "VoiceControlResult", "Word", "Sentence", "SentenceList", "TranscriptionType", "AppUuid"]
+           "DictationResult", "VoiceControlResult", "Word", "Sentence", "SentenceList", "TranscriptionType", "AppUuid",
+           "Flags"]
 
 
 class AudioCodec(IntEnum):
@@ -83,7 +84,6 @@ class AttributeList(PebblePacket):
         for attr in self.dictionary:
             assert isinstance(attr, Attribute)
             if attr.id == id:
-                assert isinstance(attr.data, attr.data.contents[attr.id])
                 return attr.data
 
         return None
@@ -128,6 +128,11 @@ class Result(IntEnum):
     FailInvalidRecognizerResponse = 0x04
     FailDisabled = 0x05
     FailInvalidMessage = 0x06
+
+
+class Flags(object):
+    # FIXME This should be converted to a bitfield type when that is implemented in the protocol handling
+    AppInitiated = 1
 
 
 class SessionSetupResult(PebblePacket):
