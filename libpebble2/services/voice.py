@@ -13,7 +13,6 @@ from libpebble2.protocol.audio import *
 __all__ = ["VoiceService", "SetupResult", "TranscriptionResult"]
 
 logger = logging.getLogger("libpebble2.voice")
-logger.setLevel(logging.DEBUG)
 
 
 class SetupResult(IntEnum):
@@ -54,9 +53,10 @@ class VoiceService(EventSourceMixin):
         pass
 
     def _handle_session_setup(self, flags, message):
-        if (message.session_type != SessionType.Dictation) or (message.session_id == VoiceService.SESSION_ID_INVALID) or \
-                (message.attributes.is_empty()) or \
-                (message.attributes.get_attribute(AttributeType.SpeexEncoderInfo) is None):
+        if ((message.session_type != SessionType.Dictation) or
+                (message.session_id == VoiceService.SESSION_ID_INVALID) or
+                (message.attributes.is_empty()) or
+                (message.attributes.get_attribute(AttributeType.SpeexEncoderInfo) is None)):
             return
 
         if self._session_id != VoiceService.SESSION_ID_INVALID:
