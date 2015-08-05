@@ -5,14 +5,16 @@ This service handles voice control endpoint messages, parses the data and expose
 voice control messages to be sent to a Pebble. It does not implement the state machine for ordering voice control
 messages correctly: this must be handled by the user of the service.
 
+Events
+------
 The service exposes the following events, which can be subscribed to with VoiceServer.register_handler:
 
 * ``session_setup`` - Session setup request received
 * ``audio_frame`` - Audio data frame received
 * ``audio_stop`` - Audio data stopped
 
-Voice Protocol Sequencing:
---------------------------
+Voice Protocol Sequencing
+-------------------------
 The correct sequencing for communicating with the Pebble smartwatch is as follows:
 
 **Watch-terminated sessions:**
@@ -46,3 +48,4 @@ Dictation result       Server   ``VoiceService.send_dictation_result``
 .. automodule:: libpebble2.services.voice
     :members:
     :inherited-members:
+
