@@ -29,6 +29,13 @@ class TranscriptionResult(IntEnum):
 
 
 class VoiceService(EventSourceMixin):
+    '''
+        Service to expose voice control to external tools
+
+        :param pebble: The pebble with which to establish a voice session.
+        :type pebble: .PebbleConnection
+        '''
+
     SESSION_ID_INVALID = 0
 
     def __init__(self, pebble):
