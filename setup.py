@@ -26,7 +26,7 @@ __version__= None  # Overwritten by executing version.py.
 with open('libpebble2/version.py') as f:
     exec(f.read())
 
-setup(name='libpebble2',
+setup(name='libpebble2-dev',
       version=__version__,
       description='Library for communicating with pebbles over pebble protocol',
       long_description=open('README.rst').read(),
