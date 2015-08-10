@@ -5,7 +5,7 @@ from .appmessage import *
 from .apps import *
 from .audio import *
 from .blobdb import *
-from .datalogging import *
+from .data_logging import *
 from .logs import *
 from .meta import *
 from .music import *
