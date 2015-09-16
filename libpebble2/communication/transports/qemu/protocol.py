@@ -72,7 +72,7 @@ class QemuButton(PebblePacket):
     state = Uint8()
 
 class QemuTimeFormat(PebblePacket):
-    is24Hour = Boolean()
+    is_24_hour = Boolean()
 
 
 class QemuPacket(PebblePacket):
