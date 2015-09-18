@@ -8,6 +8,7 @@ import collections
 import logging
 import struct
 
+from libpebble2.exceptions import IncompleteMessage
 from .types import Field, DEFAULT_ENDIANNESS
 
 __all__ = ["PebblePacket"]
@@ -160,6 +161,8 @@ class PebblePacket(with_metaclass(PacketType)):
         :rtype: (:class:`PebblePacket`, :any:`int`)
         """
         length = struct.unpack_from('!H', message, 0)[0] + 4
+        if len(message) < length:
+            raise IncompleteMessage()
         command, = struct.unpack_from('!H', message, 2)
         if command in _PacketRegistry:
             return _PacketRegistry[command].parse(message[4:length])[0], length
