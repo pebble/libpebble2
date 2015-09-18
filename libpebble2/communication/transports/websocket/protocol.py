@@ -18,7 +18,7 @@ class WebSocketRelayToWatch(PebblePacket):
 
 
 class WebSocketPhoneAppLog(PebblePacket):
-    payload = BinaryArray()
+    payload = FixedString()
 
 
 class WebSocketPhoneServerLog(PebblePacket):

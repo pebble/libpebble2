@@ -11,6 +11,7 @@ class PebbleHardware(object):
     BIANCA = 6
     SNOWY_EVT2 = 7
     SNOWY_DVT = 8
+    BOBBY_SMILES = 10
 
     TINTIN_BB = 0xFF
     TINTIN_BB2 = 0xFE
@@ -27,6 +28,7 @@ class PebbleHardware(object):
         BIANCA: 'aplite',
         SNOWY_EVT2: 'basalt',
         SNOWY_DVT: 'basalt',
+        BOBBY_SMILES: 'basalt',
         TINTIN_BB: 'aplite',
         TINTIN_BB2: 'aplite',
         SNOWY_BB: 'basalt',
