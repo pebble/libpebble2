@@ -48,3 +48,7 @@ class ConnectionError(PebbleError):
     Connecting to the Pebble failed.
     """
     pass
+
+
+class IncompleteMessage(PebbleError):
+    pass

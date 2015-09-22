@@ -11,7 +11,7 @@ import threading
 
 from .transports import BaseTransport, MessageTargetWatch
 from libpebble2.events.threaded import ThreadedEventHandler
-from libpebble2.exceptions import PacketDecodeError, ConnectionError
+from libpebble2.exceptions import PacketDecodeError, ConnectionError, IncompleteMessage
 from libpebble2.protocol.base import PebblePacket, PacketType
 from libpebble2.protocol.system import (PhoneAppVersion, AppVersionResponse, WatchVersion, WatchVersionRequest,
                                         WatchVersionResponse, WatchModel, ModelRequest, Model)
@@ -41,6 +41,7 @@ class PebbleConnection(object):
     def __init__(self, transport, log_protocol_level=None, log_packet_level=None):
         assert isinstance(transport, BaseTransport)
         self.transport = transport
+        self.pending_bytes = b''
         self.event_handler = ThreadedEventHandler()
         self._register_internal_handlers()
         self._watch_info = None
@@ -108,10 +109,29 @@ class PebbleConnection(object):
         :param message: A raw message from the watch, without any transport framing.
         :type message: bytes
         """
+        if self.log_protocol_level is not None:
+            logger.log(self.log_protocol_level, "<- %s", hexlify(message).decode())
+        message = self.pending_bytes + message
+
         while len(message) >= 4:
-            if self.log_protocol_level is not None:
-                logger.log(self.log_protocol_level, "<- %s", hexlify(message).decode())
-            packet, length = PebblePacket.parse_message(message)
+            try:
+                packet, length = PebblePacket.parse_message(message)
+            except IncompleteMessage:
+                self.pending_bytes = message
+                break
+            except:
+                # At this point we've failed to deconstruct the message via normal means, but we don't want to end
+                # up permanently desynced (because we wiped a partial message), nor do we want to get stuck (because
+                # we didn't wipe anything). We therefore parse the packet length manually and skip ahead that far.
+                # If the expected length is 0, we wipe everything to ensure forward motion (but we are quite probably
+                # screwed).
+                expected_length, = struct.unpack('!H', message[:2])
+                if expected_length == 0:
+                    self.pending_bytes = b''
+                else:
+                    self.pending_bytes = message[expected_length + 4:]
+                raise
+
             self.event_handler.broadcast_event("raw_inbound", message[:length])
             if self.log_packet_level is not None:
                 logger.log(self.log_packet_level, "<- %s", packet)
@@ -119,6 +139,7 @@ class PebbleConnection(object):
             self.event_handler.broadcast_event((_EventType.Watch, type(packet)), packet)
             if length == 0:
                 break
+        self.pending_bytes = message
 
     def _broadcast_transport_message(self, origin, message):
         """

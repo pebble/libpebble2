@@ -211,6 +211,9 @@ class Model(IntEnum):
     SnowyBlack = 11
     SnowyWhite = 12
     SnowyRed = 13
+    BobbySilver = 14
+    BobbyBlack = 15
+    BobbyGold = 16
 
 
 class ModelRequest(PebblePacket):
