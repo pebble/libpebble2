@@ -59,6 +59,25 @@ class QemuTransport(BaseTransport):
 
     def read_packet(self):
         while True:
+            if len(self.assembled_data) > 0:
+                try:
+                    packet, length = QemuInboundPacket.parse(self.assembled_data)
+                except PacketDecodeError:
+                    pass
+                else:
+                    self.assembled_data = self.assembled_data[length:]
+                    if packet.signature == HEADER_SIGNATURE and packet.footer == FOOTER_SIGNATURE:
+                        if isinstance(packet.data, QemuSPP):
+                            return MessageTargetWatch(), packet.data.payload
+                        else:
+                            return MessageTargetQemu(packet.protocol), packet.data
+                    else:
+                        raise PacketDecodeError("QemuTransport: signature mismatch ({:x} = {:x}, {:x} = {:x})".format(
+                            packet.signature,
+                            HEADER_SIGNATURE,
+                            packet.footer,
+                            FOOTER_SIGNATURE,
+                        ))
             try:
                 received = self.socket.recv(self.BUFFER_SIZE)
                 if len(received) == 0:
@@ -68,24 +87,6 @@ class QemuTransport(BaseTransport):
             except socket.error:
                 self._connected = False
                 raise ConnectionError("Disconnected.")
-            try:
-                packet, length = QemuInboundPacket.parse(self.assembled_data)
-            except PacketDecodeError:
-                continue
-            else:
-                self.assembled_data = self.assembled_data[length:]
-                if packet.signature == HEADER_SIGNATURE and packet.footer == FOOTER_SIGNATURE:
-                    if isinstance(packet.data, QemuSPP):
-                        return MessageTargetWatch(), packet.data.payload
-                    else:
-                        return MessageTargetQemu(packet.protocol), packet.data
-                else:
-                    raise PacketDecodeError("QemuTransport: signature mismatch ({:x} = {:x}, {:x} = {:x})".format(
-                        packet.signature,
-                        HEADER_SIGNATURE,
-                        packet.footer,
-                        FOOTER_SIGNATURE,
-                    ))
 
     def send_packet(self, message, target=MessageTargetWatch()):
         try:
