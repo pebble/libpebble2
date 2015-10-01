@@ -26,6 +26,15 @@ __version__= None  # Overwritten by executing version.py.
 with open('libpebble2/version.py') as f:
     exec(f.read())
 
+requires = [
+    'websocket-client>=0.31.0',
+    'pyserial>=2.7',
+    'six>=1.9.0',
+]
+
+if sys.version_info < (3, 4, 0):
+    requires.append('enum34>=1.0.4')
+
 setup(name='libpebble2',
       version=__version__,
       description='Library for communicating with pebbles over pebble protocol',
@@ -35,12 +44,7 @@ setup(name='libpebble2',
       author_email='katharine@pebble.com',
       license='MIT',
       packages=find_packages(),
-      install_requires=[
-        'enum34>=1.0.4',
-        'websocket-client>=0.31.0',
-        'pyserial>=2.7',
-        'six>=1.9.0',
-      ],
+      install_requires=requires,
       tests_require=[
         'pytest'
       ],
