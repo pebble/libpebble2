@@ -71,6 +71,9 @@ class QemuButton(PebblePacket):
 
     state = Uint8()
 
+class QemuTimeFormat(PebblePacket):
+    is_24_hour = Boolean()
+
 
 class QemuPacket(PebblePacket):
     signature = Uint16(default=HEADER_SIGNATURE)
@@ -84,6 +87,7 @@ class QemuPacket(PebblePacket):
         5: QemuBattery,
         6: QemuAccel,
         8: QemuButton,
+        9: QemuTimeFormat,
     }, length=length)
     footer = Uint16(default=FOOTER_SIGNATURE)
 
