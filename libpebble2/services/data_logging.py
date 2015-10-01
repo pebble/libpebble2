@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import logging
+import datetime
 
 from libpebble2.events.mixin import EventSourceMixin
 from libpebble2.protocol.data_logging import *
@@ -79,11 +80,22 @@ class DataLoggingService(EventSourceMixin):
         logger.info("Requesting empty of session {}".format(session_id))
         self._pebble.send_packet(DataLogging(data=DataLoggingEmptySession(session_id=session_id)))
         data = None
+        timeout_count = 0
         while True:
+            logger.debug("Looping again. Time: {}".format(datetime.datetime.now()))
             try:
                 result = queue.get(timeout=5).data
+                timeout_count = 0
             except TimeoutError:
-                break
+                logger.debug("Got timeout error Time: {}".format(datetime.datetime.now()))
+                timeout_count += 1
+                if timeout_count >= 2:
+                    break
+                else:
+                    self._pebble.send_packet(DataLogging(data=DataLoggingEmptySession(
+                                             session_id=session_id)))
+                    continue
+
             if isinstance(result, DataLoggingDespoolSendData):
                 if result.session_id != session_id:
                     self._pebble.send_packet(DataLogging(
@@ -95,7 +107,7 @@ class DataLoggingService(EventSourceMixin):
                     else:
                         data += result.data
                     self._pebble.send_packet(DataLogging(
-                        data=DataLoggingACK(session_id=session_id)))
+                                             data=DataLoggingACK(session_id=session_id)))
 
         queue.close()
         return (session, data)
