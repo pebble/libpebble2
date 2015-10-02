@@ -133,7 +133,7 @@ class AppMessageService(EventSourceMixin):
         self._pebble.unregister_endpoint(self._handle)
 
     def _get_txid(self):
-        self._current_txid += 1
+        self._current_txid = (self._current_txid + 1) % 0xff
         return self._current_txid
 
 
