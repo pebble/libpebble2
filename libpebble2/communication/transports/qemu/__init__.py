@@ -91,7 +91,16 @@ class QemuTransport(BaseTransport):
     def send_packet(self, message, target=MessageTargetWatch()):
         try:
             if isinstance(target, MessageTargetWatch):
-                self.socket.send(QemuPacket(data=QemuSPP(payload=message)).serialise())
+                start_idx = 0
+                bytes_left = len(message)
+                while bytes_left:
+                    bytes_to_send = bytes_left
+                    if bytes_to_send > self.BUFFER_SIZE:
+                        bytes_to_send = self.BUFFER_SIZE
+                    chunk = message[start_idx:start_idx+bytes_to_send]
+                    self.socket.send(QemuPacket(data=QemuSPP(payload=chunk)).serialise())
+                    bytes_left -= bytes_to_send
+                    start_idx += bytes_to_send
             elif isinstance(target, MessageTargetQemu):
                 if not target.raw:
                     self.socket.send(QemuPacket(data=message).serialise())
