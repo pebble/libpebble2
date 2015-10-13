@@ -164,7 +164,8 @@ class VoiceService(EventSourceMixin):
             assert isinstance(app_uuid, uuid.UUID)
             attributes.append(Attribute(id=AttributeType.AppUuid, data=AppUuid(uuid=app_uuid)))
 
-        attributes.append(Attribute(id=AttributeType.Transcription, data=transcription))
+        if transcription is not None:
+            attributes.append(Attribute(id=AttributeType.Transcription, data=transcription))
 
         logger.debug("Sending dictation result (result={}".format(result) +
                      ", app={})".format(app_uuid) if app_uuid is not None else ")")
