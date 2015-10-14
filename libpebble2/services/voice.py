@@ -120,6 +120,9 @@ class VoiceService(EventSourceMixin):
         :param app_uuid: UUID of app that initiated the session
         :type app_uuid: uuid.UUID
         '''
+        assert self._session_id != VoiceService.SESSION_ID_INVALID
+        assert isinstance(result, SetupResult)
+
         flags = 0
         if app_uuid is not None:
             assert isinstance(app_uuid, uuid.UUID)
@@ -130,6 +133,9 @@ class VoiceService(EventSourceMixin):
 
         self._pebble.send_packet(VoiceControlResult(flags=flags, data=SessionSetupResult(
                 session_type=SessionType.Dictation, result=result)))
+
+        if result != SetupResult.Success:
+            self._session_id = VoiceService.SESSION_ID_INVALID
 
     def send_dictation_result(self, result, sentences=None, app_uuid=None):
         '''
