@@ -16,15 +16,15 @@ logger = logging.getLogger("libpebble2.voice")
 
 
 class SetupResult(IntEnum):
-    Success = 0,
-    FailTimeout = 1,
-    FailDisabled = 5,
+    Success = 0
+    FailTimeout = 2
+    FailDisabled = 5
 
 
 class TranscriptionResult(IntEnum):
-    Success = 0,
-    FailNoInternet = 2,
-    FailRecognizerError = 3,
+    Success = 0
+    FailNoInternet = 1
+    FailRecognizerError = 3
     FailSpeechNotRecognized = 4
 
 
