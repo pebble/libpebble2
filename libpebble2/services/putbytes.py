@@ -103,4 +103,4 @@ class PutBytes(EventSourceMixin):
 
     def _install(self, cookie):
         packet = transfers.PutBytes(data=transfers.PutBytesInstall(cookie=cookie))
-        self._assert_success(packet)
+        self._assert_success(self._pebble.send_and_read(packet, transfers.PutBytesResponse))
