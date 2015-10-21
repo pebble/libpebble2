@@ -262,6 +262,14 @@ class PebbleConnection(object):
         self.event_handler.broadcast_event("raw_outbound", serialised)
         self.send_raw(serialised)
 
+    def send_and_read(self, packet, endpoint, timeout=10):
+        queue = self.get_endpoint_queue(endpoint)
+        self.send_packet(packet)
+        try:
+            return queue.get(timeout=timeout)
+        finally:
+            queue.close()
+
     def send_raw(self, message):
         """
         Sends a raw binary message to the Pebble. No processing will be applied, but any transport framing should be

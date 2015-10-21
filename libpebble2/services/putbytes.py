@@ -81,9 +81,7 @@ class PutBytes(EventSourceMixin):
         else:
             packet = transfers.PutBytes(data=transfers.PutBytesInit(
                 object_size=len(self._object), object_type=self._object_type, bank=self._bank, filename=self._filename))
-        self._pebble.send_packet(packet)
-
-        result = self._pebble.read_from_endpoint(transfers.PutBytesResponse)
+        result = self._pebble.send_and_read(packet, transfers.PutBytesResponse)
         self._assert_success(result)
         return result.cookie
 
@@ -92,16 +90,17 @@ class PutBytes(EventSourceMixin):
         length = 2000
         while sent < len(self._object):
             chunk = self._object[sent:sent+length]
-            self._pebble.send_packet(transfers.PutBytes(data=(transfers.PutBytesPut(cookie=cookie, payload=chunk))))
-            self._assert_success(self._pebble.read_from_endpoint(transfers.PutBytesResponse))
+            self._pebble.send_packet()
+            packet = transfers.PutBytes(data=transfers.PutBytesPut(cookie=cookie, payload=chunk))
+            self._assert_success(self._pebble.send_and_read(packet, transfers.PutBytesResponse))
             sent += len(chunk)
             self._broadcast_event("progress", len(chunk), sent, len(self._object))
 
     def _commit(self, cookie):
         crc = stm32_crc.crc32(self._object)
-        self._pebble.send_packet(transfers.PutBytes(data=transfers.PutBytesCommit(cookie=cookie, object_crc=crc)))
-        self._assert_success(self._pebble.read_from_endpoint(transfers.PutBytesResponse))
+        packet = transfers.PutBytes(data=transfers.PutBytesCommit(cookie=cookie, object_crc=crc))
+        self._assert_success(self._pebble.send_and_read(packet, transfers.PutBytesResponse))
 
     def _install(self, cookie):
-        self._pebble.send_packet(transfers.PutBytes(data=transfers.PutBytesInstall(cookie=cookie)))
-        self._assert_success(self._pebble.read_from_endpoint(transfers.PutBytesResponse))
+        packet = transfers.PutBytes(data=transfers.PutBytesInstall(cookie=cookie))
+        self._assert_success(packet)
