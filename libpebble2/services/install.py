@@ -79,10 +79,7 @@ class AppInstaller(EventSourceMixin):
             raise AppInstallError("BlobDB error: {!s}".format(result))
 
         # Start the app.
-        self._pebble.send_packet(AppRunState(data=AppRunStateStart(uuid=app_uuid)))
-
-        # Wait for a launch request.
-        app_fetch = self._pebble.read_from_endpoint(AppFetchRequest)
+        app_fetch = self._pebble.send_and_read(AppRunState(data=AppRunStateStart(uuid=app_uuid)), AppFetchRequest)
         if app_fetch.uuid != app_uuid:
             self._pebble.send_packet(AppFetchResponse(response=AppFetchStatus.InvalidUUID))
             raise AppInstallError("App requested the wrong UUID! Asked for {}; expected {}".format(
@@ -110,13 +107,13 @@ class AppInstaller(EventSourceMixin):
         metadata = self._bundle.get_app_metadata()
         app_uuid = metadata['uuid']
 
-        self._pebble.send_packet(LegacyAppInstallRequest(data=LegacyUpgradeAppUUID(uuid=app_uuid)))
         # We don't really care if this worked; we're just waiting for it.
-        self._pebble.read_from_endpoint(LegacyAppInstallResponse)
+        self._pebble.send_and_read(LegacyAppInstallRequest(data=LegacyUpgradeAppUUID(uuid=app_uuid)),
+                                   LegacyAppInstallResponse)
 
         # Find somewhere to install to.
-        self._pebble.send_packet(LegacyAppInstallRequest(data=LegacyBankInfoRequest()))
-        result = self._pebble.read_from_endpoint(LegacyAppInstallResponse).data
+        result = self._pebble.send_and_read(LegacyAppInstallRequest(data=LegacyBankInfoRequest()),
+                                            LegacyAppInstallResponse).data
         assert isinstance(result, LegacyBankInfoResponse)
         first_free = 0
         for app in result.apps:
@@ -139,8 +136,8 @@ class AppInstaller(EventSourceMixin):
             self._send_part_legacy2(PutBytesType.Worker, worker, first_free)
 
         # Mark it as available
-        self._pebble.send_packet(LegacyAppInstallRequest(data=LegacyAppAvailable(bank=first_free, vibrate=True)))
-        self._pebble.read_from_endpoint(LegacyAppInstallResponse)
+        self._pebble.send_and_read(LegacyAppInstallRequest(data=LegacyAppAvailable(bank=first_free, vibrate=True)),
+                                   LegacyAppInstallResponse)
 
         # Launch it (which is painful on 2.x).
         appmessage = AppMessageService(self._pebble, message_type=LegacyAppLaunchMessage)

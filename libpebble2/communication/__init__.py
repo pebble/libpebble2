@@ -304,8 +304,7 @@ class PebbleConnection(object):
         This method should be called before accessing :attr:`watch_info`, :attr:`firmware_version`
         or :attr:`watch_platform`. Blocks until it has fetched the required information.
         """
-        self.send_packet(WatchVersion(data=WatchVersionRequest()))
-        self._watch_info = self.read_from_endpoint(WatchVersion).data
+        self._watch_info = self.send_and_read(WatchVersion(data=WatchVersionRequest()), WatchVersion).data
 
     @property
     def watch_info(self):
@@ -352,8 +351,7 @@ class PebbleConnection(object):
         :rtype: ~libpebble2.protocol.system.Model
         """
         if self._watch_model is None:
-            self.send_packet(WatchModel(data=ModelRequest()))
-            info_bytes = self.read_from_endpoint(WatchModel).data.data
+            info_bytes = self.send_and_read(WatchModel(data=ModelRequest()), WatchModel).data.data
             if len(info_bytes) == 4:
                 self._watch_model = struct.unpack('>I', info_bytes)
             else:
