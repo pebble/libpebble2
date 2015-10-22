@@ -214,6 +214,9 @@ class PebbleConnection(object):
         .. warning::
            Avoid calling this method from an endpoint callback; doing so is likely to lead to deadlock.
 
+        .. note::
+           If you're reading a response to a message you just sent, :meth:`send_and_read` might be more appropriate.
+
         :param endpoint: The endpoint to read from.
         :type endpoint: .PacketType
         :param timeout: The maximum time to wait before raising :exc:`.TimeoutError`.
@@ -262,6 +265,28 @@ class PebbleConnection(object):
         self.event_handler.broadcast_event("raw_outbound", serialised)
         self.send_raw(serialised)
 
+    def send_and_read(self, packet, endpoint, timeout=10):
+        """
+        Sends a packet, then returns the next response received from that endpoint. This method sets up a listener
+        before it actually sends the message, avoiding a potential race.
+
+        .. warning::
+           Avoid calling this method from an endpoint callback; doing so is likely to lead to deadlock.
+
+        :param packet: The message to send.
+        :type packet: .PebblePacket
+        :param endpoint: The endpoint to read from
+        :type endpoint: .PacketType
+        :param timeout: The maximum time to wait before raising :exc:`.TimeoutError`.
+        :return: The message read from the endpoint; of the same type as passed to ``endpoint``.
+        """
+        queue = self.get_endpoint_queue(endpoint)
+        self.send_packet(packet)
+        try:
+            return queue.get(timeout=timeout)
+        finally:
+            queue.close()
+
     def send_raw(self, message):
         """
         Sends a raw binary message to the Pebble. No processing will be applied, but any transport framing should be
@@ -296,8 +321,7 @@ class PebbleConnection(object):
         This method should be called before accessing :attr:`watch_info`, :attr:`firmware_version`
         or :attr:`watch_platform`. Blocks until it has fetched the required information.
         """
-        self.send_packet(WatchVersion(data=WatchVersionRequest()))
-        self._watch_info = self.read_from_endpoint(WatchVersion).data
+        self._watch_info = self.send_and_read(WatchVersion(data=WatchVersionRequest()), WatchVersion).data
 
     @property
     def watch_info(self):
@@ -344,10 +368,9 @@ class PebbleConnection(object):
         :rtype: ~libpebble2.protocol.system.Model
         """
         if self._watch_model is None:
-            self.send_packet(WatchModel(data=ModelRequest()))
-            info_bytes = self.read_from_endpoint(WatchModel).data.data
+            info_bytes = self.send_and_read(WatchModel(data=ModelRequest()), WatchModel).data.data
             if len(info_bytes) == 4:
-                self._watch_model = struct.unpack('>I', info_bytes)
+                self._watch_model, = struct.unpack('>I', info_bytes)
             else:
                 self._watch_model = Model.Unknown
         return self._watch_model
