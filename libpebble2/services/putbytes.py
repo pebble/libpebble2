@@ -90,7 +90,6 @@ class PutBytes(EventSourceMixin):
         length = 2000
         while sent < len(self._object):
             chunk = self._object[sent:sent+length]
-            self._pebble.send_packet()
             packet = transfers.PutBytes(data=transfers.PutBytesPut(cookie=cookie, payload=chunk))
             self._assert_success(self._pebble.send_and_read(packet, transfers.PutBytesResponse))
             sent += len(chunk)

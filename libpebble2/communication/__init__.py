@@ -370,7 +370,7 @@ class PebbleConnection(object):
         if self._watch_model is None:
             info_bytes = self.send_and_read(WatchModel(data=ModelRequest()), WatchModel).data.data
             if len(info_bytes) == 4:
-                self._watch_model = struct.unpack('>I', info_bytes)
+                self._watch_model, = struct.unpack('>I', info_bytes)
             else:
                 self._watch_model = Model.Unknown
         return self._watch_model
