@@ -54,7 +54,7 @@ class AppMessageService(EventSourceMixin):
                 if t.type == AppMessageTuple.Type.ByteArray:
                     result[t.key] = bytearray(t.data)
                 elif t.type == AppMessageTuple.Type.CString:
-                    result[t.key] = t.data.split('\x00')[0]
+                    result[t.key] = t.data.split(b'\x00')[0].decode('utf-8', errors='replace')
                 else:
                     result[t.key], = struct.unpack(self._type_mapping[(t.type, t.length)], t.data)
             self._broadcast_event("appmessage", packet.transaction_id, message.uuid, result)

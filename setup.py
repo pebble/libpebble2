@@ -46,7 +46,8 @@ setup(name='libpebble2',
       packages=find_packages(),
       install_requires=requires,
       tests_require=[
-        'pytest'
+        'pytest',
+        'pytest-mock',
       ],
       cmdclass={'test': PyTest},
       classifiers=[
