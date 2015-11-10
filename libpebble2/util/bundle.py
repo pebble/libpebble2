@@ -35,7 +35,8 @@ class PebbleBundle(object):
 
     PLATFORM_PATHS = {
         'unknown': ('',),
-        'aplite': ('',),
+        'aplite': ('aplite/', ''),  # this will fail if you have a dual aplite2/3 app and try
+                                    # installing on 2.x. Such apps are unsupported, so this is okay.
         'basalt': ('basalt/', ''),
         'chalk': ('chalk/',),
     }
