@@ -6,7 +6,7 @@ from six import iteritems
 import struct
 import uuid
 
-from libpebble2.exceptions import PacketDecodeError
+from libpebble2.exceptions import PacketDecodeError, PacketEncodeError
 
 __all__ = ["DEFAULT_ENDIANNESS", "Field", "Int8", "Uint8", "Int16", "Uint16", "Int32", "Uint32",
            "Int64", "Uint64", "Boolean", "UUID", "Union", "Embed", "Padding", "PascalString", "NullTerminatedString",
@@ -263,8 +263,8 @@ class Embed(Field):
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
         v = value.serialise(default_endianness=default_endianness)
         if self.length is not None and len(v) > self.length:
-            raise PebbleError("Embedded field with max length {} is actually {} bytes long."
-                              .format(self.length, len(v)))
+            raise PacketEncodeError("Embedded field with max length {} is actually {} bytes long."
+                                    .format(self.length, len(v)))
         return v
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
