@@ -125,6 +125,12 @@ class PebblePacket(with_metaclass(PacketType)):
         if hasattr(self, '_Meta'):
             endianness = self._Meta.get('endianness', endianness)
 
+        inferred_fields = set()
+        for k, v in iteritems(self._type_mapping):
+            inferred_fields |= {x._name for x in v.dependent_fields()}
+        for field in inferred_fields:
+            setattr(self, field, None)
+
         # Some fields want to manipulate other fields that appear before them (e.g. Unions)
         for k, v in iteritems(self._type_mapping):
             v.prepare(self, getattr(self, k))

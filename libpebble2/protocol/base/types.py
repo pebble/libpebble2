@@ -88,6 +88,9 @@ class Field(object):
     def prepare(self, obj, value):
         pass
 
+    def dependent_fields(self):
+        return []
+
 #: Used internally by :class:`PebblePacket` to sort fields into the right order.
 Field.next_id = 0
 
@@ -237,6 +240,9 @@ class Union(Field):
             else:
                 return None, length
 
+    def dependent_fields(self):
+        return [self.determinant]
+
 
 class Embed(Field):
     """
@@ -245,15 +251,33 @@ class Embed(Field):
     :param packet: The packet to embed.
     :type packet: .PebblePacket
     """
-    def __init__(self, packet):
+    def __init__(self, packet, length=None):
         self.packet = packet
+        self.length = length
         super(Embed, self).__init__()
 
+    def prepare(self, obj, value):
+        if isinstance(self.length, Field):
+            setattr(obj, self.length._name, len(value.serialise()))
+
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
-        return value.serialise(default_endianness=default_endianness)
+        v = value.serialise(default_endianness=default_endianness)
+        if self.length is not None and len(v) > self.length:
+            raise PebbleError("Embedded field with max length {} is actually {} bytes long."
+                              .format(self.length, len(v)))
+        return v
 
     def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
-        return self.packet.parse(buffer[offset:], default_endianness=default_endianness)
+        if self.length is None:
+            return self.packet.parse(buffer[offset:], default_endianness=default_endianness)
+        else:
+            return self.packet.parse(buffer[offset:offset+self.length], default_endianness=default_endianness)
+
+    def dependent_fields(self):
+        if isinstance(self.length, Field):
+            return [self.length]
+        else:
+            return []
 
 
 class Padding(Field):
@@ -380,6 +404,12 @@ class FixedString(Field):
             length = len(value)
         return struct.pack('%ds' % length, value)
 
+    def dependent_fields(self):
+        if isinstance(self.length, Field):
+            return [self.length]
+        else:
+            return []
+
 
 class PascalList(Field):
     """
@@ -428,6 +458,12 @@ class PascalList(Field):
             length += item_length
             i += 1
         return results, length
+
+    def dependent_fields(self):
+        if isinstance(self.count, Field):
+            return [self.count]
+        else:
+            return []
 
 
 class FixedList(Field):
@@ -497,6 +533,14 @@ class FixedList(Field):
             i += 1
         return results, length
 
+    def dependent_fields(self):
+        fields = []
+        if isinstance(self.count, Field):
+            fields.append(self.count)
+        if isinstance(self.length, Field):
+            fields.append(self.length)
+        return fields
+
 
 class BinaryArray(Field):
     """
@@ -545,6 +589,10 @@ class BinaryArray(Field):
                                                                                           len(buffer) - offset))
         return buffer[offset:offset+length], length
 
+    def dependent_fields(self):
+        if isinstance(self.length, Field):
+            return [self.length]
+
 
 class Optional(Field):
     """
@@ -569,3 +617,6 @@ class Optional(Field):
             return None, 0
         else:
             return self.field.buffer_to_value(obj, buffer, offset, default_endianness=default_endianness)
+
+    def dependent_fields(self):
+        return self.field.dependent_fields()

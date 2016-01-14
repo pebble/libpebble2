@@ -680,3 +680,21 @@ def test_union_deserialise(packet):
         field.buffer_to_value(packet, b'!', 0)
     field.accept_missing = True
     assert field.buffer_to_value(packet, b'magic!', 2) == (None, 4)
+
+
+def test_embedded_fixedlist():
+    class Foo(PebblePacket):
+        foo = Uint8()
+
+    class ListOfFoo(PebblePacket):
+        length = Uint8()
+        foos = FixedList(Foo, length=length)
+
+    class EmbeddedListOfFoo(PebblePacket):
+        length = Uint8()
+        list_of_foo = Embed(ListOfFoo, length=length)
+
+    thing = EmbeddedListOfFoo(list_of_foo=ListOfFoo(foos=[Foo(foo=1), Foo(foo=2)]))
+    thing.serialise()
+    assert thing.length == 3
+    assert thing.list_of_foo.length == 2
