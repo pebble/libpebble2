@@ -275,7 +275,11 @@ class Embed(Field):
         if self.length is None:
             return self.packet.parse(buffer[offset:], default_endianness=default_endianness)
         else:
-            return self.packet.parse(buffer[offset:offset+self.length], default_endianness=default_endianness)
+            if isinstance(self.length, Field):
+                max_length = getattr(obj, self.length._name)
+            else:
+                max_length = self.length
+            return self.packet.parse(buffer[offset:offset+max_length], default_endianness=default_endianness)
 
     def dependent_fields(self):
         if isinstance(self.length, Field):

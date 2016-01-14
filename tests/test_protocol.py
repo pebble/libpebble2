@@ -708,3 +708,30 @@ def test_embed_length_too_short():
 
     with pytest.raises(PacketEncodeError):
         Embedder(embedded=Embedded()).serialise()
+
+
+def test_decode_embed_with_length_field():
+    class Foo(PebblePacket):
+        foo = Uint8(1)
+
+    class EmbeddedListOfFoo(PebblePacket):
+        length = Uint8()
+        foo = Embed(Foo, length=length)
+        bar = Uint8()
+
+    result, length = EmbeddedListOfFoo.parse(b'\x01\x05\x10')
+    assert result == EmbeddedListOfFoo(length=1, foo=Foo(foo=5), bar=0x10)
+    assert length == 3
+
+
+def test_decode_embed_with_length_constant():
+    class Foo(PebblePacket):
+        foo = Uint8(1)
+
+    class EmbeddedListOfFoo(PebblePacket):
+        foo = Embed(Foo, length=1)
+        bar = Uint8()
+
+    result, length = EmbeddedListOfFoo.parse(b'\x05\x10')
+    assert result == EmbeddedListOfFoo(foo=Foo(foo=5), bar=0x10)
+    assert length == 2
