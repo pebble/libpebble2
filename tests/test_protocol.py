@@ -8,7 +8,7 @@ import pytest
 from enum import IntEnum, Enum
 import uuid
 
-from libpebble2.exceptions import PacketDecodeError
+from libpebble2.exceptions import PacketDecodeError, PacketEncodeError
 from libpebble2.protocol.base import PebblePacket
 from libpebble2.protocol.base.types import *
 
@@ -698,3 +698,13 @@ def test_embedded_fixedlist():
     thing.serialise()
     assert thing.length == 3
     assert thing.list_of_foo.length == 2
+
+def test_embed_length_too_short():
+    class Embedded(PebblePacket):
+        foo = Padding(10)
+
+    class Embedder(PebblePacket):
+        embedded = Embed(Embedded, length=5)
+
+    with pytest.raises(PacketEncodeError):
+        Embedder(embedded=Embedded()).serialise()

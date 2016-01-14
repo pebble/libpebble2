@@ -262,7 +262,11 @@ class Embed(Field):
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
         v = value.serialise(default_endianness=default_endianness)
-        if self.length is not None and len(v) > self.length:
+        if isinstance(self.length, Field):
+            max_len = getattr(obj, self.length._name)
+        else:
+            max_len = self.length
+        if max_len is not None and len(v) > max_len:
             raise PacketEncodeError("Embedded field with max length {} is actually {} bytes long."
                                     .format(self.length, len(v)))
         return v
