@@ -735,3 +735,11 @@ def test_decode_embed_with_length_constant():
     result, length = EmbeddedListOfFoo.parse(b'\x05\x10')
     assert result == EmbeddedListOfFoo(foo=Foo(foo=5), bar=0x10)
     assert length == 2
+
+
+def test_fixed_length_array():
+    class Foo(PebblePacket):
+        array = BinaryArray(length=2)
+
+    result = Foo(array=b'hi').serialise()
+    assert result == b'hi'

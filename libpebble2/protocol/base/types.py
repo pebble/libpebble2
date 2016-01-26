@@ -600,6 +600,8 @@ class BinaryArray(Field):
     def dependent_fields(self):
         if isinstance(self.length, Field):
             return [self.length]
+        else:
+            return []
 
 
 class Optional(Field):
