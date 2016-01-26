@@ -743,3 +743,11 @@ def test_fixed_length_array():
 
     result = Foo(array=b'hi').serialise()
     assert result == b'hi'
+
+
+def test_unbounded_length_array():
+    class Foo(PebblePacket):
+        array = BinaryArray()
+
+    result = Foo(array=b'hello world').serialise()
+    assert result == b'hello world'
