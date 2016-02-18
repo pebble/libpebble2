@@ -22,6 +22,15 @@ class PutBytesError(PebbleError):
     pass
 
 
+class GetBytesError(PebbleError):
+    """
+    A getbytes session failed.
+    """
+    def __init__(self, code):
+        self.code = code
+        PebbleError.__init__(self, "Failed to get bytes: {!s}".format(code))
+
+
 class ScreenshotError(PebbleError):
     """
     A screenshot failed.

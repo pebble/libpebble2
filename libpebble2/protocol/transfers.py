@@ -8,7 +8,8 @@ from .base.types import *
 
 __all__ = ["ObjectType", "PutBytesInstall", "PutBytesInit", "PutBytesAppInit", "PutBytesPut", "PutBytesCommit",
            "PutBytesAbort", "PutBytes", "PutBytesApp", "PutBytesResponse", "GetBytes", "GetBytesCoredumpRequest",
-           "GetBytesDataResponse", "GetBytesFileRequest", "GetBytesInfoResponse"]
+           "GetBytesDataResponse", "GetBytesFileRequest", "GetBytesInfoResponse", "GetBytesFlashRequest",
+           "GetBytesUnreadCoredumpRequest"]
 
 
 class ObjectType(IntEnum):
@@ -98,6 +99,7 @@ class PutBytesResponse(PebblePacket):
 
 
 class GetBytesCoredumpRequest(PebblePacket):
+    """Requests a coredump."""
     pass
 
 
@@ -109,7 +111,7 @@ class GetBytesInfoResponse(PebblePacket):
         DoesNotExist = 0x3
         Corrupted = 0x4
 
-    error_code = Uint8()
+    error_code = Uint8(enum=ErrorCode)
     num_bytes = Uint32()
 
 
@@ -119,7 +121,19 @@ class GetBytesDataResponse(PebblePacket):
 
 
 class GetBytesFileRequest(PebblePacket):
+    """Requests a file. This only works on non-release firmwares."""
     filename = PascalString(null_terminated=True, count_null_terminator=False)
+
+
+class GetBytesFlashRequest(PebblePacket):
+    """Requests a region of flash. This only works on non-release firmwares."""
+    offset = Uint32()
+    length = Uint32()
+
+
+class GetBytesUnreadCoredumpRequest(PebblePacket):
+    """Requests a coredump, but errors if it has already been read."""
+    pass
 
 
 class GetBytes(PebblePacket):
@@ -132,5 +146,7 @@ class GetBytes(PebblePacket):
         0x00: GetBytesCoredumpRequest,
         0x01: GetBytesInfoResponse,
         0x02: GetBytesDataResponse,
-        0x03: GetBytesFileRequest
+        0x03: GetBytesFileRequest,
+        0x04: GetBytesFlashRequest,
+        0x05: GetBytesUnreadCoredumpRequest,
     })

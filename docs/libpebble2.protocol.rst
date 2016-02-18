@@ -39,7 +39,7 @@ libpebble2.protocol.blobdb module
 libpebble2.protocol.datalogging module
 --------------------------------------
 
-.. automodule:: libpebble2.protocol.datalogging
+.. automodule:: libpebble2.protocol.data_logging
     :members:
     :undoc-members:
     :show-inheritance:
