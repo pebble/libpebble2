@@ -751,3 +751,75 @@ def test_unbounded_length_array():
 
     result = Foo(array=b'hello world').serialise()
     assert result == b'hello world'
+
+
+def test_serialise_bitfield():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Uint32(), 6)
+        b = Bitfield(Uint32(), 11)
+        c = Bitfield(Uint32(), 7)
+
+    assert Foo(a=0,  b=0,    c=0  ).serialise() == b'\x00\x00\x00'
+    assert Foo(a=0,  b=0,    c=64 ).serialise() == b'\x00\x00\x80'
+    assert Foo(a=0,  b=0,    c=127).serialise() == b'\x00\x00\xfe'
+    assert Foo(a=0,  b=0,    c=1  ).serialise() == b'\x00\x00\x02'
+    assert Foo(a=0,  b=1024, c=0  ).serialise() == b'\x00\x00\x01'
+    assert Foo(a=0,  b=1,    c=0  ).serialise() == b'\x40\x00\x00'
+    assert Foo(a=0,  b=2047, c=0  ).serialise() == b'\xc0\xff\x01'
+    assert Foo(a=32, b=0,    c=0  ).serialise() == b'\x20\x00\x00'
+    assert Foo(a=1,  b=0,    c=0  ).serialise() == b'\x01\x00\x00'
+    assert Foo(a=63, b=0,    c=0  ).serialise() == b'\x3f\x00\x00'
+    assert Foo(a=63, b=2047, c=127).serialise() == b'\xff\xff\xff'
+    assert Foo(a=1,  b=1,    c=1  ).serialise() == b'\x41\x00\x02'
+
+
+def test_serialise_middle_bitfield():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Uint8(), 2)
+        b = Bitfield(Uint8(), 4)
+        c = Bitfield(Uint8(), 2)
+
+    assert Foo(a=2, b=8, c=2).serialise() == b'\xa2'
+    assert Foo(a=1, b=1, c=1).serialise() == b'\x45'
+
+
+def test_deserialise_middle_bitfield():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Uint8(), 2)
+        b = Bitfield(Uint8(), 4)
+        c = Bitfield(Uint8(), 2)
+
+    assert Foo.parse(b'\xa2') == (Foo(a=2, b=8, c=2), 1)
+    assert Foo.parse(b'\x45') == (Foo(a=1, b=1, c=1), 1)
+
+
+def test_deserialise_bitfield():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Uint32(), 6)
+        b = Bitfield(Uint32(), 11)
+        c = Bitfield(Uint32(), 7)
+
+    assert Foo.parse(b'\x00\x00\x00') == (Foo(a=0,  b=0,    c=0  ), 3)
+    assert Foo.parse(b'\x00\x00\x80') == (Foo(a=0,  b=0,    c=64 ), 3)
+    assert Foo.parse(b'\x00\x00\xfe') == (Foo(a=0,  b=0,    c=127), 3)
+    assert Foo.parse(b'\x00\x00\x02') == (Foo(a=0,  b=0,    c=1  ), 3)
+    assert Foo.parse(b'\x00\x00\x01') == (Foo(a=0,  b=1024, c=0  ), 3)
+    assert Foo.parse(b'\x40\x00\x00') == (Foo(a=0,  b=1,    c=0  ), 3)
+    assert Foo.parse(b'\xc0\xff\x01') == (Foo(a=0,  b=2047, c=0  ), 3)
+    assert Foo.parse(b'\x20\x00\x00') == (Foo(a=32, b=0,    c=0  ), 3)
+    assert Foo.parse(b'\x01\x00\x00') == (Foo(a=1,  b=0,    c=0  ), 3)
+    assert Foo.parse(b'\x3f\x00\x00') == (Foo(a=63, b=0,    c=0  ), 3)
+    assert Foo.parse(b'\xff\xff\xff') == (Foo(a=63, b=2047, c=127), 3)
+    assert Foo.parse(b'\x41\x00\x02') == (Foo(a=1,  b=1,    c=1  ), 3)

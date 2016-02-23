@@ -3,6 +3,9 @@ __author__ = "katharine"
 
 from six import iteritems
 
+import array
+import itertools
+import string
 import struct
 import uuid
 
@@ -10,7 +13,7 @@ from libpebble2.exceptions import PacketDecodeError, PacketEncodeError
 
 __all__ = ["DEFAULT_ENDIANNESS", "Field", "Int8", "Uint8", "Int16", "Uint16", "Int32", "Uint32",
            "Int64", "Uint64", "Boolean", "UUID", "Union", "Embed", "Padding", "PascalString", "NullTerminatedString",
-           "FixedString", "PascalList", "FixedList", "BinaryArray", "Optional"]
+           "FixedString", "PascalList", "FixedList", "BinaryArray", "Optional", "Bitfield"]
 
 DEFAULT_ENDIANNESS = '!'
 
@@ -630,3 +633,111 @@ class Optional(Field):
 
     def dependent_fields(self):
         return self.field.dependent_fields()
+
+
+class Bitfield(Field):
+    def __init__(self, type, bits, *args, **kwargs):
+        self.field_type = type
+        self.bits = bits
+        super(Bitfield, self).__init__(*args, **kwargs)
+
+    def _find_bitfield_group(self, obj):
+        # Split the fields into groups of bitfields and not-bitfields
+        groups = [list(x[1]) for x in itertools.groupby(obj._type_mapping.items(), key=lambda x: isinstance(x[1], Bitfield))]
+        # Find the group we're in. That is the current bitfield group.
+        my_group = list(filter(lambda x: self in (y[1] for y in x), groups)[0])
+        return my_group
+
+    def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
+        my_group = self._find_bitfield_group(obj)
+
+        # The first field in any bitfield group handles the whole group.
+        if [x[1] for x in my_group].index(self) != 0:
+            return b''
+
+        total_bits = sum(x[1].bits for x in my_group)
+        if total_bits > 32:
+            raise PacketDecodeError("Bitfields larger than 32 bits are not tested.")
+        total_bytes = total_bits // 8 + (1 if total_bits % 8 != 0 else 0)
+
+        endianness = self.endianness or default_endianness
+
+        # Little-endian bitfields are stored backwards and have padding at the beginning.
+        if endianness == '<':
+            iter_group = reversed(my_group)
+            bit_offset = total_bytes * 8 - total_bits
+        else:
+            iter_group = my_group
+            bit_offset = 0
+
+        result = array.array('B', [0] * total_bytes)
+        for name, field in iter_group:
+            value = getattr(obj, name)
+            field_format = field.field_type.struct_format
+            # If the field is signed, and the value is less than zero, force a sign bit in.
+            if field_format in string.ascii_lowercase:
+                if value < 0:
+                    value |= 1 << (field.bits - 1)  # Add a signing bit in an appropriate place.
+
+            # Remove the bits that don't fit in our given width.
+            value &= ((1 << field.bits) - 1)
+
+            # Stuff the bits in this field into some bytes.
+            value_bit_index = 0
+            while value_bit_index < field.bits:
+                available_bits = 8 - (bit_offset % 8)
+                shift = (field.bits - value_bit_index) - available_bits
+                result[bit_offset // 8] |= (((value >> max(0, shift)) & ((1 << available_bits) - 1)) << max(0, -shift)) & 0xff
+                bit_offset += min(available_bits, field.bits - value_bit_index)
+                value_bit_index += available_bits
+
+        # Little endian bitfields are byte swapped.
+        if endianness == '<':
+            result = array.array('B', reversed(result))
+
+        return result.tostring()
+
+    def buffer_to_value(self, obj, buffer, offset, default_endianness=DEFAULT_ENDIANNESS):
+        endianness = self.endianness or default_endianness
+        my_group = self._find_bitfield_group(obj)
+        # Little-endian bitfields are stored backwards.
+        if endianness == '<':
+            my_group = list(reversed(my_group))
+        my_index = [x[1] for x in my_group].index(self)
+
+        total_bits = sum(x[1].bits for x in my_group)
+        if total_bits > 32:
+            raise PacketDecodeError("Bitfields larger than 32 bits are not tested.")
+        total_bytes = total_bits // 8 + (1 if total_bits % 8 != 0 else 0)
+
+        buffer_bytes = array.array('B', buffer[offset:offset+total_bytes])
+
+        # Figure out how far along we need to start.
+        bit_offset = sum(x[1].bits for x in my_group[:my_index])
+
+        # Little-endian bitfields have padding at the start and are byte-swapped.
+        if endianness == '<':
+            buffer_bytes = array.array('B', (reversed(buffer_bytes)))
+            bit_offset += total_bytes * 8 - total_bits
+
+        bits_read = 0
+        value = 0
+
+        while bits_read < self.bits:
+            available_bits = 8 - (bit_offset % 8)
+            b = buffer_bytes[bit_offset // 8]
+            # Get the bits that we care about to the bottom
+            value_bits = b >> (8 - min(self.bits - bits_read, available_bits) - (bit_offset % 8))
+            # Mask out the bits we don't want.
+            value_bits &= (1 << min(self.bits - bits_read, available_bits)) - 1
+            # Bump up our counters.
+            bit_offset += min(available_bits, self.bits - bits_read)
+            bits_read = min(bits_read + available_bits, self.bits)
+            # Add the bits into our final value.
+            value |= value_bits << (self.bits - bits_read)
+
+        # The last Bitfield in a group has to advance the reading; the rest leave it alone.
+        if endianness == '<':
+            return value, total_bytes if my_index == 0 else 0
+        else:
+            return value, total_bytes if my_index == len(my_group) - 1 else 0
