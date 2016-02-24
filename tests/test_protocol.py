@@ -823,3 +823,53 @@ def test_deserialise_bitfield():
     assert Foo.parse(b'\x3f\x00\x00') == (Foo(a=63, b=0,    c=0  ), 3)
     assert Foo.parse(b'\xff\xff\xff') == (Foo(a=63, b=2047, c=127), 3)
     assert Foo.parse(b'\x41\x00\x02') == (Foo(a=1,  b=1,    c=1  ), 3)
+
+
+def test_deserialise_bitfield_bool():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Boolean(), 1)
+        b = Bitfield(Boolean(), 1)
+
+    assert Foo.parse(b'\x03') == (Foo(a=True, b=True), 1)
+    assert Foo.parse(b'\x01')[0].a is True  # 'is' to get the right type.
+    assert Foo.parse(b'\x01')[0].b is False
+
+
+def test_serialise_bitfield_signed():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Int16(), 5)
+
+    assert Foo(a=-1).serialise() == b'\x1f'
+    assert Foo(a=-16).serialise() == b'\x10'
+    assert Foo(a=15).serialise() == b'\x0f'
+
+
+def test_deserialise_bitfield_signed():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Int16(), 5)
+
+    assert Foo.parse(b'\x1f') == (Foo(a=-1), 1)
+    assert Foo.parse(b'\x10') == (Foo(a=-16), 1)
+    assert Foo.parse(b'\x0f') == (Foo(a=15), 1)
+
+
+def test_serialise_multiple_bitfields():
+    class Foo(PebblePacket):
+        class Meta:
+            endianness = '<'
+
+        a = Bitfield(Uint8(), bits=3)
+        b = Bitfield(Boolean(), bits=1)
+        c = Boolean()
+        d = Bitfield(Uint16(), bits=4)
+
+    assert Foo(a=7, b=False, c=True, d=2).serialise() == b'\x07\x01\x02'

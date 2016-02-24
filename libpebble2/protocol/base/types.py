@@ -2,6 +2,7 @@ from __future__ import absolute_import
 __author__ = "katharine"
 
 from six import iteritems
+from six.moves import filter
 
 import array
 import itertools
@@ -645,7 +646,7 @@ class Bitfield(Field):
         # Split the fields into groups of bitfields and not-bitfields
         groups = [list(x[1]) for x in itertools.groupby(obj._type_mapping.items(), key=lambda x: isinstance(x[1], Bitfield))]
         # Find the group we're in. That is the current bitfield group.
-        my_group = list(filter(lambda x: self in (y[1] for y in x), groups)[0])
+        my_group = list(next(filter(lambda x: self in (y[1] for y in x), groups)))
         return my_group
 
     def value_to_bytes(self, obj, value, default_endianness=DEFAULT_ENDIANNESS):
@@ -657,7 +658,7 @@ class Bitfield(Field):
 
         total_bits = sum(x[1].bits for x in my_group)
         if total_bits > 32:
-            raise PacketDecodeError("Bitfields larger than 32 bits are not tested.")
+            raise PacketEncodeError("Bitfields larger than 32 bits are not tested.")
         total_bytes = total_bits // 8 + (1 if total_bits % 8 != 0 else 0)
 
         endianness = self.endianness or default_endianness
@@ -725,16 +726,24 @@ class Bitfield(Field):
 
         while bits_read < self.bits:
             available_bits = 8 - (bit_offset % 8)
+            used_bits = min(self.bits - bits_read, available_bits)
             b = buffer_bytes[bit_offset // 8]
             # Get the bits that we care about to the bottom
-            value_bits = b >> (8 - min(self.bits - bits_read, available_bits) - (bit_offset % 8))
+            value_bits = b >> (8 - used_bits - (bit_offset % 8))
             # Mask out the bits we don't want.
-            value_bits &= (1 << min(self.bits - bits_read, available_bits)) - 1
+            value_bits &= (1 << used_bits) - 1
             # Bump up our counters.
-            bit_offset += min(available_bits, self.bits - bits_read)
-            bits_read = min(bits_read + available_bits, self.bits)
+            bit_offset += used_bits
+            bits_read += used_bits
             # Add the bits into our final value.
             value |= value_bits << (self.bits - bits_read)
+
+        # If our value is supposed to be signed, sign it.
+        if (self.field_type.struct_format in string.ascii_lowercase and
+                    value > (2 ** (self.bits - 1)) - 1):
+            value -= 2 ** self.bits
+
+        value, = struct.unpack(self.field_type.struct_format, struct.pack(self.field_type.struct_format, value))
 
         # The last Bitfield in a group has to advance the reading; the rest leave it alone.
         if endianness == '<':
