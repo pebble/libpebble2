@@ -158,6 +158,7 @@ Field types
     ~libpebble2.protocol.base.types.Int16
     ~libpebble2.protocol.base.types.Int32
     ~libpebble2.protocol.base.types.Int64
+    ~libpebble2.protocol.base.types.Bitfield
     ~libpebble2.protocol.base.types.FixedString
     ~libpebble2.protocol.base.types.NullTerminatedString
     ~libpebble2.protocol.base.types.PascalString

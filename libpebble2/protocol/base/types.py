@@ -491,24 +491,43 @@ class FixedList(Field):
                   number of members. On deserialisation, is treated as a maximum.
     :param length: A :class:`Field` containing the number of bytes in the list. On serialisation, will be set to the
                    length of the serialised list. On deserialisation, is treated as a maximum.
+    :param member_length: A :class:`Field` containing the size in bytes of each element of the list. On serialisation,
+                   will be set to the length of items in the list. On deserialisation, elements cannot use more space
+                   than indicated (but could use less).
     """
-    def __init__(self, member_type, count=None, length=None):
+    def __init__(self, member_type, count=None, length=None, member_length=None):
         self.member_type = member_type
         self.count = count
         self.length = length
+        self.member_length = member_length
         super(FixedList, self).__init__()
 
     def prepare(self, obj, value):
         if isinstance(self.count, Field):
             setattr(obj, self.count._name, len(value))
 
-        if isinstance(self.length, Field):
-            current = getattr(obj, self.length._name) or 0
+        if isinstance(self.length, Field) or isinstance(self.member_length, Field):
             if isinstance(self.member_type, Field):
-                total_length = sum(len(self.member_type.value_to_bytes(obj, x)) for x in value)
+                member_lengths = [len(self.member_type.value_to_bytes(obj, x)) for x in value]
             else:
-                total_length = sum(len(x.serialise()) for x in value)
-            setattr(obj, self.length._name, current + total_length)
+                member_lengths = [len(x.serialise()) for x in value]
+
+            if isinstance(self.length, Field):
+                setattr(obj, self.length._name, (getattr(obj, self.length._name) or 0) + sum(member_lengths))
+
+            if isinstance(self.member_length, Field):
+                current = getattr(obj, self.member_length._name)
+                if len(set(member_lengths)) > 1:
+                    raise PacketEncodeError("Need to encode a member length, but members are of inconsistent lengths.")
+                if current is None:
+                    if len(member_lengths) == 0:
+                        current = 0
+                    else:
+                        current = member_lengths[0]
+                elif len(member_lengths) > 0:
+                    if current != member_lengths[0]:
+                        raise PacketEncodeError("Member length mismatch shared across multiple lists.")
+                setattr(obj, self.member_length._name, current)
 
     def value_to_bytes(self, obj, values, default_endianness=DEFAULT_ENDIANNESS):
         result = b''
@@ -524,6 +543,7 @@ class FixedList(Field):
         length = 0
         max_count = None
         max_length = None
+        member_length = None
 
         if isinstance(self.count, Field):
             max_count = getattr(obj, self.count._name)
@@ -531,14 +551,22 @@ class FixedList(Field):
         if isinstance(self.length, Field):
             max_length = getattr(obj, self.length._name)
 
+        if isinstance(self.member_length, Field):
+            member_length = getattr(obj, self.member_length._name)
+
         i = 0
         while (offset + length < len(buffer) and (max_count is None or i < max_count)
                and (max_length is None or length < max_length)):
+
+            available_buffer = buffer[offset+length:]
+            if member_length is not None:
+                available_buffer = available_buffer[:member_length]
+
             if isinstance(self.member_type, Field):
-                value, item_length = self.member_type.buffer_to_value(obj, buffer, offset+length,
+                value, item_length = self.member_type.buffer_to_value(obj, available_buffer, 0,
                                                                       default_endianness=default_endianness)
             else:
-                value, item_length = self.member_type.parse(buffer[offset+length:],
+                value, item_length = self.member_type.parse(available_buffer,
                                                             default_endianness=default_endianness)
             results.append(value)
             length += item_length
@@ -551,6 +579,8 @@ class FixedList(Field):
             fields.append(self.count)
         if isinstance(self.length, Field):
             fields.append(self.length)
+        if isinstance(self.member_length, Field):
+            fields.append(self.member_length)
         return fields
 
 
@@ -637,6 +667,18 @@ class Optional(Field):
 
 
 class Bitfield(Field):
+    """
+    Represents a C bitfield - that is, a set of fields of a struct that are sized in bytes instead of bits.
+    Bitfields are expected to appear in contiguous groups, and will be serialised and deserialised as a set.
+
+    Padding and ordering is applied in the same manner as GCC applies it to a packed little-endian struct on pebble.
+    Bitfields that sum to more than 32 bits are not supported, as the behaviour of such fields has not been verified.
+
+    :param type: The nominal type of field that is being provided. Only integer fields are permitted.
+    :type type: Field
+    :param bits: The actual width of the field, in bits.
+    :type bits: int
+    """
     def __init__(self, type, bits, *args, **kwargs):
         self.field_type = type
         self.bits = bits

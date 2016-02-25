@@ -545,6 +545,31 @@ def test_fixed_list_packet_count_serialise(packet):
     assert field.value_to_bytes(packet, [Foo(foo=0xAABB), Foo(foo=0xCCDD)]) == b'\xaa\xbb\xcc\xdd'
     assert field.value_to_bytes(packet, [Foo(foo=0xAABB), Foo(foo=0xCCDD)], default_endianness='<') == b'\xbb\xaa\xdd\xcc'
 
+def test_fixed_list_member_length_deserialise(packet):
+    class Foo(PebblePacket):
+        foo = Uint8()
+        bar = Optional(Uint8())
+
+    class Bar(PebblePacket):
+        foo_size = Uint8()
+        foo_count = Uint8()
+        foos = FixedList(Foo, count=foo_count, member_length=foo_size)
+
+    assert Bar.parse(b'\x01\x02\x03\x04') == (Bar(foo_size=1, foo_count=2, foos=[Foo(foo=3), Foo(foo=4)]), 4)
+    assert Bar.parse(b'\x02\x01\x03\x04') == (Bar(foo_size=2, foo_count=1, foos=[Foo(foo=3, bar=4)]), 4)
+
+def test_fixed_list_member_length_serialise(packet):
+    class Foo(PebblePacket):
+        foo = Uint8()
+        bar = Optional(Uint8())
+
+    class Bar(PebblePacket):
+        foo_size = Uint8()
+        foo_count = Uint8()
+        foos = FixedList(Foo, count=foo_count, member_length=foo_size)
+
+    assert Bar(foos=[Foo(foo=1, bar=2), Foo(foo=3, bar=4)]).serialise() == b'\x02\x02\x01\x02\x03\x04'
+
 def test_binary_array_serialise(packet):
     field = BinaryArray()
 
