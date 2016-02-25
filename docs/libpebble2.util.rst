@@ -9,6 +9,13 @@ libpebble2.util.bundle module
     :undoc-members:
     :show-inheritance:
 
+libpebble2.util.settings_file module
+------------------------------------
+
+.. automodule:: libpebble2.util.settings_file
+    :members:
+    :show-inheritance:
+
 libpebble2.util.hardware module
 -------------------------------
 

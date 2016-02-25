@@ -41,3 +41,19 @@ def process_buffer(buf, c=0xffffffff):
 
 def crc32(data):
     return process_buffer(data)
+
+
+def crc8(data):
+    lookup_table = [0, 47, 94, 113, 188, 147, 226, 205, 87, 120, 9, 38, 235, 196, 181, 154]
+
+    crc = 0
+    data = bytearray(data)
+    data_len = len(data)
+    for i in range(0, data_len * 2):
+        nibble = data[data_len - (i // 2) - 1]
+        if i % 2 == 0:
+            nibble >>= 4
+        index = nibble ^ (crc >> 4)
+        crc = lookup_table[index & 0xf] ^ ((crc << 4) & 0xf0)
+
+    return crc
