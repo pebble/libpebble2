@@ -4,7 +4,7 @@ __author__ = 'katharine'
 from .base import PebblePacket
 from .base.types import *
 
-__all__ = ["RequestLogs", "LogMessage", "LogMessageDone", "NoLogMessages", "LogShipping", "AppLogShippingControl",
+__all__ = ["RequestLogs", "LogMessage", "LogMessageDone", "NoLogMessages", "LogDumpShipping", "AppLogShippingControl",
            "AppLogMessage"]
 
 # Flash log messages
@@ -33,9 +33,9 @@ class NoLogMessages(PebblePacket):
     cookie = Uint32()
 
 
-class LogShipping(PebblePacket):
+class LogDumpShipping(PebblePacket):
     class Meta:
-        endpoint = 2000
+        endpoint = 2002
 
     command = Uint8()
     data = Union(command, {
