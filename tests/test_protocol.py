@@ -606,6 +606,12 @@ def test_binary_array_fixed_length_deserialise(packet):
     with pytest.raises(PacketDecodeError):
         field.buffer_to_value(packet, b'fooba', 0)
 
+def test_binary_array_unicode_serialise(packet):
+    field = BinaryArray(length=6)
+
+    with pytest.raises(TypeError):
+        field.value_to_bytes(packet, u'hello', 0)
+
 def test_optional_serialise(packet):
     field = Optional(BinaryArray(length=packet_field(packet, 'length')))
 
