@@ -39,6 +39,7 @@ class PebbleBundle(object):
                                     # installing on 2.x. Such apps are unsupported, so this is okay.
         'basalt': ('basalt/', ''),
         'chalk': ('chalk/',),
+        'diorite': ('diorite/', ''),
     }
 
     def __init__(self, bundle_path, hardware=PebbleHardware.UNKNOWN):
