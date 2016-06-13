@@ -25,7 +25,9 @@ class AppGlanceSliceType(IntEnum):
 class AppGlanceSlice(PebblePacket):
 
     def __init__(self, expiration_time, slice_type, extra_attributes=None):
-        attributes = deepcopy(extra_attributes)
+        attributes = []
+        if extra_attributes:
+            attributes.extend(deepcopy(extra_attributes))
         attributes.append(TimelineAttribute(attribute_id=37, content=struct.pack('<I', expiration_time)))
 
         # Add 4 bytes to account for total_size (2), type (1), and attribute_count (1)
