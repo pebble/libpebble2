@@ -4,7 +4,7 @@ __author__ = 'Liam McLoughlin'
 import struct
 
 try:
-    import pulse2
+    from pebble import pulse2
 except ImportError:
     pass
 
@@ -34,7 +34,7 @@ class PULSETransport(BaseTransport):
         self.buffer = b''
 
         try:
-            import pulse2
+            from pebble import pulse2
         except ImportError:
             raise PebbleError('pulse2 package not installed: it is required for PULSE transport')
 
