@@ -32,6 +32,7 @@ class BlobDatabaseID(IntEnum):
     App = 2
     Reminder = 3
     Notification = 4
+    AppGlance = 11
 
 
 class BlobCommand(PebblePacket):
