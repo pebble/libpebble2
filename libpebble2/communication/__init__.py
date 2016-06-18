@@ -206,7 +206,7 @@ class PebbleConnection(object):
         """
         return self.event_handler.unregister_handler(handle)
 
-    def read_from_endpoint(self, endpoint, timeout=10):
+    def read_from_endpoint(self, endpoint, timeout=15):
         """
         Blocking read from an endpoint. Will block until a message is received, or it times out. Also see
         :meth:`get_endpoint_queue` if you are considering calling this in a loop.
@@ -237,7 +237,7 @@ class PebbleConnection(object):
         """
         return self.event_handler.queue_events((_EventType.Watch, endpoint))
 
-    def read_transport_message(self, origin, message_type, timeout=10):
+    def read_transport_message(self, origin, message_type, timeout=15):
         """
         Blocking read of a transport message that does not indicate a message from the Pebble.
         Will block until a message is received, or it times out.
@@ -265,7 +265,7 @@ class PebbleConnection(object):
         self.event_handler.broadcast_event("raw_outbound", serialised)
         self.send_raw(serialised)
 
-    def send_and_read(self, packet, endpoint, timeout=10):
+    def send_and_read(self, packet, endpoint, timeout=15):
         """
         Sends a packet, then returns the next response received from that endpoint. This method sets up a listener
         before it actually sends the message, avoiding a potential race.
