@@ -17,8 +17,8 @@ class PULSETransport(BaseTransport):
     Represents a direct connection to a physical/virtual Pebble uses the PULSEv2 interface.
     This transport expects to be given a PULSE2 Link object.
 
-    :param connection: A PULSE2 Interface object to tunnel Pebble Protocol over.
-    :type link: pulse2.link.Interface
+    :param connection: A PULSE2 Link object to tunnel Pebble Protocol over.
+    :type link: pulse2.link.Link
     """
     must_initialise = True
 
@@ -33,11 +33,6 @@ class PULSETransport(BaseTransport):
         self.connection = None
         self.buffer = b''
 
-        try:
-            from pebble import pulse2
-        except ImportError:
-            raise PebbleError('pulse2 package not installed: it is required for PULSE transport')
-
     @staticmethod
     def _chunks(list_items, chunk_length):
         for i in xrange(0, len(list_items), chunk_length):
@@ -49,8 +44,13 @@ class PULSETransport(BaseTransport):
             raise ConnectionError('Failed to open PPoPULSE socket')
 
         self._send_with_opcode(self.OPCODE_PROTOCOL_OPEN)
-        opcode, _ = self._recv_with_opcode()
-        assert opcode == self.OPCODE_PROTOCOL_OPEN
+        start_time = time.time()
+        while time.time() < start_time + 10.0:
+            opcode, _ = self._recv_with_opcode()
+            if opcode == self.OPCODE_PROTOCOL_OPEN:
+                break
+        else:
+            raise ConnectionError('Timeout waiting for PPoPULSE open ACK')
 
     def disconnect(self):
         if self.connected:
@@ -78,8 +78,8 @@ class PULSETransport(BaseTransport):
                     return MessageTargetWatch(), msg_data
 
             opcode, data = self._recv_with_opcode()
-            assert opcode == self.OPCODE_PROTOCOL_DATA
-            self.buffer += data
+            if opcode == self.OPCODE_PROTOCOL_DATA:
+                self.buffer += data
 
     def send_packet(self, message, target=MessageTargetWatch()):
         assert isinstance(target, MessageTargetWatch)
