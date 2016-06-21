@@ -14,12 +14,16 @@ class PebbleHardware(object):
     SPALDING_EVT = 9
     BOBBY_SMILES = 10
     SPALDING = 11
+    SILK_EVT = 12
+    SILK = 14
 
     TINTIN_BB = 0xFF
     TINTIN_BB2 = 0xFE
     SNOWY_BB = 0xFD
     SNOWY_BB2 = 0xFC
     SPALDING_BB2 = 0xFB
+    SILK_BB = 0xFA
+    SILK_BB2 = 0xF8
 
     PLATFORMS = {
         UNKNOWN: 'unknown',
@@ -34,11 +38,15 @@ class PebbleHardware(object):
         BOBBY_SMILES: 'basalt',
         SPALDING_EVT: 'chalk',
         SPALDING: 'chalk',
+        SILK_EVT: 'diorite',
+        SILK: 'diorite',
         TINTIN_BB: 'aplite',
         TINTIN_BB2: 'aplite',
         SNOWY_BB: 'basalt',
         SNOWY_BB2: 'basalt',
         SPALDING_BB2: 'chalk',
+        SILK_BB: 'diorite',
+        SILK_BB2: 'diorite',
     }
 
     @classmethod

@@ -71,8 +71,13 @@ class QemuButton(PebblePacket):
 
     state = Uint8()
 
+
 class QemuTimeFormat(PebblePacket):
     is_24_hour = Boolean()
+
+
+class QemuTimelinePeek(PebblePacket):
+    enabled = Boolean()
 
 
 class QemuPacket(PebblePacket):
@@ -88,6 +93,7 @@ class QemuPacket(PebblePacket):
         6: QemuAccel,
         8: QemuButton,
         9: QemuTimeFormat,
+        10: QemuTimelinePeek,
     }, length=length)
     footer = Uint16(default=FOOTER_SIGNATURE)
 

@@ -241,7 +241,10 @@ class Union(Field):
                 return None, length
 
     def dependent_fields(self):
-        return [self.determinant]
+        if not self.accept_missing:
+            return [self.determinant]
+        else:
+            return []
 
 
 class Embed(Field):
