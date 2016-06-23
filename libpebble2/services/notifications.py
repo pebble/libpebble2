@@ -16,7 +16,7 @@ NotificationSource = LegacyNotification.Source
 
 class Notifications(object):
     """
-    Sends simple notifications.
+    Sends notifications.
 
     .. note:
        If a :class:`BlobDBClient` already exists for the given :class:`PebbleConnection`, you should pass that in here
@@ -42,6 +42,8 @@ class Notifications(object):
         :type sender: str
         :param source: The source of the notification
         :type source: .LegacyNotification.Source
+        :param actions Actions to be sent with a notification (list of TimelineAction objects)
+        :type actions list
         """
         if self._pebble.firmware_version.major < 3:
             self._send_legacy_notification(subject, message, sender, source)
