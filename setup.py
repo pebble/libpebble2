@@ -45,6 +45,9 @@ setup(name='libpebble2',
       license='MIT',
       packages=find_packages(),
       install_requires=requires,
+      extras_require={
+        'pulse': ['pebble.pulse2>=0.0.5'],
+      },
       tests_require=[
         'pytest',
         'pytest-mock',
