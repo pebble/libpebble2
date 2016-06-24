@@ -80,7 +80,8 @@ class Notifications(object):
                                       TimelineAttribute(attribute_id=0x01, content=b"Dismiss")
                                   ])
                    ]
-        actions.extend(additional_actions)
+        if additional_actions:
+            actions.extend(additional_actions)
 
         notification = TimelineItem(
             item_id=item_id,
