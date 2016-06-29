@@ -41,6 +41,7 @@ class PebbleHardware(object):
         SPALDING_EVT: 'chalk',
         SPALDING: 'chalk',
         SILK_EVT: 'diorite',
+        ROBERT_EVT: 'emery,
         SILK: 'diorite',
         TINTIN_BB: 'aplite',
         TINTIN_BB2: 'aplite',
