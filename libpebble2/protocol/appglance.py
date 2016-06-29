@@ -47,12 +47,12 @@ class AppGlanceSlice(PebblePacket):
 
 class AppGlanceSliceIconAndSubtitle(AppGlanceSlice):
 
-    def __init__(self, expiration_time, icon_resource_id=None, subtitle=None):
+    def __init__(self, expiration_time, icon=None, subtitle_template_string=None):
         attributes = []
-        if icon_resource_id:
-            attributes.append(TimelineAttribute(attribute_id=4, content=struct.pack('<I', icon_resource_id)))
-        if subtitle:
-            attributes.append(TimelineAttribute(attribute_id=47, content=subtitle.encode('utf-8')))
+        if icon:
+            attributes.append(TimelineAttribute(attribute_id=48, content=struct.pack('<I', icon)))
+        if subtitle_template_string:
+            attributes.append(TimelineAttribute(attribute_id=47, content=subtitle_template_string.encode('utf-8')))
         super(AppGlanceSliceIconAndSubtitle, self).__init__(expiration_time, AppGlanceSliceType.IconAndSubtitle,
                                                             extra_attributes=attributes)
 
