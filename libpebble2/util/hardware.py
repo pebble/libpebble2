@@ -23,6 +23,7 @@ class PebbleHardware(object):
     SNOWY_BB2 = 0xFC
     SPALDING_BB2 = 0xFB
     SILK_BB = 0xFA
+    ROBERT_BB = 0xF9
     SILK_BB2 = 0xF8
 
     PLATFORMS = {
@@ -46,6 +47,7 @@ class PebbleHardware(object):
         SNOWY_BB2: 'basalt',
         SPALDING_BB2: 'chalk',
         SILK_BB: 'diorite',
+        ROBERT_BB: 'emery',
         SILK_BB2: 'diorite',
     }
 
