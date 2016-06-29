@@ -40,6 +40,7 @@ class PebbleBundle(object):
         'basalt': ('basalt/', ''),
         'chalk': ('chalk/',),
         'diorite': ('diorite/', 'aplite/', ''),
+        'emery': ('emery/', 'basalt/', ''),
     }
 
     def __init__(self, bundle_path, hardware=PebbleHardware.UNKNOWN):
