@@ -15,6 +15,7 @@ class PebbleHardware(object):
     BOBBY_SMILES = 10
     SPALDING = 11
     SILK_EVT = 12
+    ROBERT_EVT = 13
     SILK = 14
 
     TINTIN_BB = 0xFF
