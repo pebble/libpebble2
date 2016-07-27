@@ -126,15 +126,16 @@ class BlobDBClient(EventSourceMixin):
         return random.randrange(1, 2**16 - 1, 1)
 
     def _handle_response(self, packet):
+        if packet.response == BlobStatus.TryLater:
+            # Do nothing, wait for the packet to timeout and re-send
+            pass
+
         with self._lock:
             if packet.token in self._pending_ack:
                 pending = self._pending_ack[packet.token]
                 del self._pending_ack[packet.token]
 
-                if packet.response == BlobStatus.TryLater:
-                    # Do nothing, wait for the packet to timeout and re-send
-                    pass
-                elif callable(pending.callback):
+                if callable(pending.callback):
                     pending.callback(packet.response)
 
 
