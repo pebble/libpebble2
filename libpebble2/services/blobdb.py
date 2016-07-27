@@ -132,7 +132,8 @@ class BlobDBClient(EventSourceMixin):
                 del self._pending_ack[packet.token]
 
                 if packet.response == BlobStatus.TryLater:
-                    self._enqueue(self._PendingItem(pending.token, pending.data, pending.callback))
+                    # Do nothing, wait for the packet to timeout and re-send
+                    pass
                 elif callable(pending.callback):
                     pending.callback(packet.response)
 
@@ -153,7 +154,7 @@ class SyncWrapper(object):
         self.result = None
         method(*args, callback=self.callback, **kwargs)
 
-    def wait(self, timeout=10):
+    def wait(self, timeout=15):
         self.event.wait(timeout=timeout)
         return self.result
 
