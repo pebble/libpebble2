@@ -128,7 +128,7 @@ class BlobDBClient(EventSourceMixin):
     def _handle_response(self, packet):
         if packet.response == BlobStatus.TryLater:
             # Do nothing, wait for the packet to timeout and re-send
-            pass
+            return
 
         with self._lock:
             if packet.token in self._pending_ack:
