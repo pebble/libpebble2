@@ -60,6 +60,9 @@ class BlobStatus(IntEnum):
     KeyDoesNotExist = 0x06
     DatabaseFull = 0x07
     DataStale = 0x08
+    NotSupported = 0x09
+    Locked = 0xA
+    TryLater = 0xB
 
 
 class BlobResponse(PebblePacket):

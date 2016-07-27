@@ -121,7 +121,8 @@ class BlobDBClient(EventSourceMixin):
                 self._pebble.send_packet(data)
             time.sleep(0.05)
 
-    def _get_token(self):
+    @staticmethod
+    def _get_token():
         return random.randrange(1, 2**16 - 1, 1)
 
     def _handle_response(self, packet):
@@ -129,7 +130,10 @@ class BlobDBClient(EventSourceMixin):
             if packet.token in self._pending_ack:
                 pending = self._pending_ack[packet.token]
                 del self._pending_ack[packet.token]
-                if callable(pending.callback):
+
+                if packet.response == BlobStatus.TryLater:
+                    self._enqueue(self._PendingItem(pending.token, pending.data, pending.callback))
+                elif callable(pending.callback):
                     pending.callback(packet.response)
 
 
