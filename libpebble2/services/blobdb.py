@@ -121,14 +121,20 @@ class BlobDBClient(EventSourceMixin):
                 self._pebble.send_packet(data)
             time.sleep(0.05)
 
-    def _get_token(self):
+    @staticmethod
+    def _get_token():
         return random.randrange(1, 2**16 - 1, 1)
 
     def _handle_response(self, packet):
+        if packet.response == BlobStatus.TryLater:
+            # Do nothing, wait for the packet to timeout and re-send
+            return
+
         with self._lock:
             if packet.token in self._pending_ack:
                 pending = self._pending_ack[packet.token]
                 del self._pending_ack[packet.token]
+
                 if callable(pending.callback):
                     pending.callback(packet.response)
 
@@ -149,7 +155,7 @@ class SyncWrapper(object):
         self.result = None
         method(*args, callback=self.callback, **kwargs)
 
-    def wait(self, timeout=10):
+    def wait(self, timeout=15):
         self.event.wait(timeout=timeout)
         return self.result
 
