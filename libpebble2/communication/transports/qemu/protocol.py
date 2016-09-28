@@ -80,6 +80,16 @@ class QemuTimelinePeek(PebblePacket):
     enabled = Boolean()
 
 
+class QemuContentSize(PebblePacket):
+    class ContentSize(IntEnum):
+        Small = 0
+        Medium = 1
+        Large = 2
+        ExtraLarge = 3
+
+    size = Uint8()
+
+
 class QemuPacket(PebblePacket):
     signature = Uint16(default=HEADER_SIGNATURE)
     protocol = Uint16()
@@ -94,6 +104,7 @@ class QemuPacket(PebblePacket):
         8: QemuButton,
         9: QemuTimeFormat,
         10: QemuTimelinePeek,
+        11: QemuContentSize,
     }, length=length)
     footer = Uint16(default=FOOTER_SIGNATURE)
 
