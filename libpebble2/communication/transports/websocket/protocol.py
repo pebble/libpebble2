@@ -33,7 +33,7 @@ class WebSocketInstallStatus(PebblePacket):
     class StatusCode(IntEnum):
         Success = 0x00
         Failed = 0x01
-    status = Uint8()
+    status = Uint32()
 
 
 class WebSocketPhoneInfoRequest(PebblePacket):
