@@ -43,6 +43,12 @@ class PebbleBundle(object):
         'emery': ('emery/', 'basalt/', ''),
     }
 
+    MAX_COMPATIBILITY_VERSIONS = {
+        'basalt': {'': 0x16},
+        'diorite': {'aplite/': 0x50, '': 0x16},
+        'emery': {'basalt/': 0x54, '': 0x16},
+    }
+
     def __init__(self, bundle_path, hardware=PebbleHardware.UNKNOWN):
         self.hardware = hardware
         bundle_abs_path = os.path.abspath(bundle_path)
@@ -75,6 +81,27 @@ class PebbleBundle(object):
                 if real_path in self._zip_contents:
                     return real_path
             return None
+
+    def _get_real_prefix(self):
+        prefixes = self.prefixes_for_hardware(self.hardware)
+        for prefix in prefixes:
+            real_path = prefix + self.MANIFEST_FILENAME
+            if real_path in self._zip_contents:
+                return prefix
+        return None
+
+    def should_permit_install(self):
+        platform = PebbleHardware.hardware_platform(self.hardware)
+        prefix = self._get_real_prefix()
+        if prefix is None:
+            return False
+        if platform in self.MAX_COMPATIBILITY_VERSIONS:
+            max_version = self.MAX_COMPATIBILITY_VERSIONS[platform].get(prefix, None)
+            if max_version is None:
+                return True
+            metadata = self.get_app_metadata()
+            return metadata['sdk_version_minor'] < max_version
+        return True
 
     def get_manifest(self):
         if self.manifest:
