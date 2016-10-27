@@ -26,6 +26,7 @@ class PebbleHardware(object):
     SILK_BB = 0xFA
     ROBERT_BB = 0xF9
     SILK_BB2 = 0xF8
+    ROBERT_BB2 = 0xF7
 
     PLATFORMS = {
         UNKNOWN: 'unknown',
@@ -51,6 +52,7 @@ class PebbleHardware(object):
         SILK_BB: 'diorite',
         ROBERT_BB: 'emery',
         SILK_BB2: 'diorite',
+        ROBERT_BB2: 'emery',
     }
 
     @classmethod
